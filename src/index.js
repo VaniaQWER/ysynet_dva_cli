@@ -1,7 +1,7 @@
 import dva from 'dva';
 // import createLoading from 'dva-loading';
-import './index.css';
 import moment from 'moment';
+import "antd/dist/antd.less";
 import 'moment/locale/zh-cn';
 
 require('ysynet_reset/fixed.css')
