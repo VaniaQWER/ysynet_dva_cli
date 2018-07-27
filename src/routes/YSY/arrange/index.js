@@ -1,14 +1,24 @@
 import React, { PureComponent } from 'react';
-import { Button, Row, Col, Form, Input, Table, DatePicker, Modal, Checkbox } from 'antd';
+import { Button, Row, Col, Form, Input, Table, DatePicker, Modal, Checkbox,message } from 'antd';
 import RemoteTable from '../../../components/TableGrid';
 import  FetchSelect from '../../../components/FetchSelect'
-import { formItemLayout } from '../../../utils/commonStyles';
 import ysy from '../../../api/ysy'
 import { connect } from 'dva';
 import moment from 'moment';
 const { Search,TextArea } = Input;
 const FormItem = Form.Item;
 const RangePicker = DatePicker.RangePicker;
+
+const formItemLayout = {
+  labelCol: {
+    xs: { span: 24 },
+    sm: { span: 5 },//5
+  },
+  wrapperCol: {
+    xs: { span: 24 },
+    sm: { span: 15 },
+  },
+};
 
 class ModalForm extends PureComponent{
   render(){
@@ -79,17 +89,22 @@ class Arrange extends PureComponent{
     arrangeVisible: false,
     saveLoading: false,
     isEdit: false,
+    leftDataSource: [],
+    leftDataCache: [],// 左侧缓存数据
+    leftTableLoading: false,
     leftSelected: [],
     leftSelectedRows: [],
+    rightDataSource: [],
     rightSelected: [],
     rightSelectedRows: [],
     LeftIndeterminate: true,
+    rightTableLoading: false,
     leftCheckAll: false,
     rightIndeterminate: true,
     rightCheckAll: false,
     title: '新建部署',
     record: {},
-    query: {}
+    query: {},
   }
   /* 
     获取所有机构列表
@@ -101,9 +116,8 @@ class Arrange extends PureComponent{
     this.AddOrEditforms.validateFields((err,values)=>{
       if(!err){
         values.orgId = this.state.orgId;
-        if(this.props.isEdit){
+        if(this.state.isEdit){
           values.deployId = this.state.record.deployId;
-          values.orgId = this.state.record.deployName;
         }
         values.startTime = values.usefulDate[0].format('YYYY-DD-MM');
         values.endTime = values.usefulDate[1].format('YYYY-DD-MM');
@@ -123,62 +137,109 @@ class Arrange extends PureComponent{
   }
   onLeftCheckAllChange = (e) => {
     let allOrgIdList = [];
-    let { orgList } = this.props.arrange;
-    orgList.map(item => allOrgIdList.push(item.orgId));
+    let { leftDataSource } = this.state;
+    leftDataSource.map(item => allOrgIdList.push(item.orgId));
     this.setState({
       leftSelected: e.target.checked ? allOrgIdList : [],
-      leftSelectedRows: e.target.checked ? orgList: [],
+      leftSelectedRows: e.target.checked ? leftDataSource: [],
       LeftIndeterminate: false,
       leftCheckAll: e.target.checked,
     });
   }
   onRightCheckAllChange = (e) => {
     let rightOrgIdList = [];
-    let { targetKeys } = this.props.arrange;
-    targetKeys.map(item => rightOrgIdList.push(item.orgId));
+    let { rightDataSource } = this.state;
+    rightDataSource.map(item => rightOrgIdList.push(item.orgId));
     this.setState({
       rightSelected: e.target.checked ? rightOrgIdList : [],
-      rightSelectedRows: e.target.checked ? targetKeys: [],
+      rightSelectedRows: e.target.checked ? rightDataSource: [],
       rightIndeterminate: false,
       rightCheckAll: e.target.checked,
     });
   }
+  // 左侧搜索 
   leftSearch = (value) =>{
-    this.search('left',value)
+    this.setState({ leftTableLoading: true });
+    let { leftDataCache,leftDataSource } = this.state;
+    if(value){
+      let newData = leftDataSource.filter(item=> item.orgName.includes(value));
+      this.setState({ leftDataSource: newData,leftTableLoading: false });
+    }else{
+      this.setState({ leftDataSource: leftDataCache, leftTableLoading: false })
+    }
   }
+  // 右侧搜索
   rightSearch = (value) =>{
+    this.setState({ rightTableLoading: true });
     this.search('right',value)
   }
   search = (dir,value,record) =>{
     let values = {};
     values.deployId = this.state.record.deployId || record.deployId;
-    if(value){
-      values.searchName = value;
-    }
-    values.flag = dir === 'right'?'00':'01'
+    values.flag = dir === 'right'? '00': '01';
+    values.searchName = value;
     this.props.dispatch({
       type: 'arrange/search',
-      payload: { ...values }
+      payload: { ...values },
+      callback: (searchData)=>{
+        console.log(searchData,'search')
+        this.setState(searchData)
+      }
     })
   }
+  //添加机构
   addOrg = () =>{
-    this.props.dispatch({
-      type: 'arrange/transfer',
-      payload: { data: [...this.state.rightSelectedRows], key: 'add' }
+    let { rightSelectedRows, leftDataSource, rightDataSource } = this.state;
+    let newLeftData = [...leftDataSource, ...rightSelectedRows];
+    let newRightData = [];
+    rightDataSource.map(item => {
+      let flag = true;
+      rightSelectedRows.map((list,idx)=>{
+        if(item.orgId === list.orgId){
+          flag = false;
+        }
+        return null;
+      });
+      if(flag){
+        newRightData.push(item)
+      }
+      return null;
     });
-    this.setState({ rightSelected: [], rightSelectedRows: [],rightCheckAll: false });
+    console.log(newRightData,'newRightData')
+    this.setState({ leftDataSource: newLeftData,leftDataCache: newLeftData, rightDataSource: newRightData,
+      rightSelected: [], rightSelectedRows: [],rightCheckAll: false 
+    });
   }
+  //移除机构
   removeOrg = () =>{
-    this.props.dispatch({
-      type: 'arrange/transfer',
-      payload: { data: [...this.state.leftSelectedRows], key: 'remove' }
+    let { leftSelectedRows, leftDataSource, rightDataSource } = this.state;
+    let newRightData = [...rightDataSource, ...leftSelectedRows];
+    let newLeftData = [];
+    leftDataSource.map(item => {
+      let flag = true;
+      leftSelectedRows.map((list,idx)=>{
+        if(item.orgId === list.orgId){
+          flag = false;
+        }
+        return null;
+      });
+      if(flag){
+        newLeftData.push(item)
+      }
+      return null;
     });
-    this.setState({ leftSelected: [], leftSelectedRows: [],leftCheckAll: false });
+    console.log(newLeftData,'newLeftData')
+    this.setState({ leftDataSource: newLeftData, leftDataCache: newLeftData, rightDataSource: newRightData,
+      leftSelected: [], leftSelectedRows: [], leftCheckAll: false
+    })
   }
   // 编辑部署 确定保存
   modifyOrg = () =>{
+    if(this.state.leftSelected.length === 0){
+      return message.warning('已添加机构中请至少勾选一项');
+    }
     let addOrgIds = [];
-    this.props.arrange.orgList.map(item => addOrgIds.push(item.orgId));
+    this.state.leftDataSource.map(item => addOrgIds.push(item.orgId));
     let values = {};
     values.deployId = this.state.record.deployId;
     values.addOrgIds = addOrgIds;
@@ -200,32 +261,39 @@ class Arrange extends PureComponent{
     })
   }
   render(){
-    const { leftTableLoading, rightTableLoading, orgList, targetKeys } = this.props.arrange;
-    const { record, isEdit, addVisible, arrangeVisible, title } = this.state;
+    const { record, isEdit, addVisible, arrangeVisible, 
+      title, leftDataSource, rightDataSource,leftTableLoading, rightTableLoading } = this.state;
     const columns = [{
       title:'部署名称',
-      dataIndex: 'deployName'
+      dataIndex: 'deployName',
+      width: 280
     },{
       title:'授权码',
       dataIndex: 'keyCode'
     },{
       title:'授权有效期',
-      dataIndex: 'usefulDate'
+      dataIndex: 'usefulDate',
+      width: 200
     },{
       title:'管理员账号',
-      dataIndex: 'userNo'
+      dataIndex: 'userNo',
+      width: 150
     },{
       title:'最后编辑时间',
-      dataIndex: 'modifyTime'
+      dataIndex: 'modifyTime',
+      width: 180
     },{
       title:'机构数量',
-      dataIndex: 'orgCount'
+      dataIndex: 'orgCount',
+      width: 120
     },{
       title:'备注',
       dataIndex: 'tfRemark'
     },{
       title: '操作',
       dataIndex: 'action',
+      width: 150,
+      fixed: 'right',
       render:(text,record)=>{
         return <span>
           <a onClick={()=>{
@@ -261,6 +329,8 @@ class Arrange extends PureComponent{
       </Row>
       <Modal
         title={title}
+        style={{ top: 20 }}
+        width={800}
         className='ant-modal-center-footer'
         visible={addVisible}
         onCancel={()=>this.setState({ addVisible: false })}
@@ -297,7 +367,7 @@ class Arrange extends PureComponent{
             <div className='ysynet-transfer-header'>
               <div>
                 <Checkbox 
-                  disabled={orgList.length === 0? true: false}
+                  disabled={leftDataSource.length === 0? true: false}
                   indeterminate={this.state.LeftIndeterminate}
                   onChange={this.onLeftCheckAllChange}
                   checked={this.state.leftCheckAll}
@@ -305,34 +375,38 @@ class Arrange extends PureComponent{
                 <span style={{ marginLeft: 16 }}>已添加机构</span>
               </div>
               <div>
-                <span><span>{this.state.leftSelected.length ? `${this.state.leftSelected.length}/`:'' }</span>{orgList.length}</span>
+                <span><span>{this.state.leftSelected.length ? `${this.state.leftSelected.length}/`:'' }</span>{leftDataSource.length}</span>
               </div>
             </div>
-            <Search 
-              style={{ margin: '10px 0' }}
-              placeholder='请输入搜索内容'
-              onSearch={this.leftSearch}
-            />
-            <Table 
-              dataSource={orgList}
-              columns={ModalColumns}
-              loading={leftTableLoading}
-              pagination={false}
-              showHeader={false}
-              size={'small'}
-              rowKey={'orgId'}
-              rowSelection={{
-                selectedRowKeys: this.state.leftSelected,
-                onChange: (selectedRowKeys, selectedRows) => {
-                this.setState({
-                  leftSelected: selectedRowKeys,
-                  leftSelectedRows: selectedRows,
-                  LeftIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < orgList.length),
-                  leftCheckAll: selectedRowKeys.length === orgList.length,
-                  })
-                }
-            }}
-            />
+            <div style={{ height: 412}}>
+              <Search 
+                style={{ margin: '10px 0' }}
+                placeholder='请输入搜索内容'
+                onSearch={this.leftSearch}
+              />
+              <div style={{ height: 380,maxHeight: 380, overflow: 'auto' }}>
+                <Table 
+                  dataSource={leftDataSource}
+                  columns={ModalColumns}
+                  loading={leftTableLoading}
+                  pagination={false}
+                  showHeader={false}
+                  size={'small'}
+                  rowKey={'orgId'}
+                  rowSelection={{
+                    selectedRowKeys: this.state.leftSelected,
+                    onChange: (selectedRowKeys, selectedRows) => {
+                    this.setState({
+                      leftSelected: selectedRowKeys,
+                      leftSelectedRows: selectedRows,
+                      LeftIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < leftDataSource.length),
+                      leftCheckAll: selectedRowKeys.length === leftDataSource.length,
+                      })
+                    }
+                  }}
+                />
+              </div>
+            </div>
           </Col>
           <Col span={2} style={{ textAlign:'center',alignSelf:'center' }}>
             <Button type='primary'disabled={this.state.rightSelected.length === 0? true : false} onClick={this.addOrg}>添加</Button>
@@ -342,7 +416,7 @@ class Arrange extends PureComponent{
             <div className='ysynet-transfer-header'>
               <div>
                 <Checkbox 
-                  disabled={targetKeys.length === 0? true: false}
+                  disabled={rightDataSource.length === 0? true: false}
                   indeterminate={this.state.rightIndeterminate}
                   onChange={this.onRightCheckAllChange}
                   checked={this.state.rightCheckAll}
@@ -350,30 +424,35 @@ class Arrange extends PureComponent{
                 <span style={{ marginLeft: 16 }}>未添加机构</span>
               </div>
             </div>
-            <Search 
-              style={{ margin: '10px 0' }}
-              onSearch={this.rightSearch}
-              placeholder='请输入搜索内容'/>
-            <Table 
-              columns={ModalColumns}
-              pagination={false}
-              showHeader={false}
-              loading={rightTableLoading}
-              dataSource={targetKeys}
-              size={'small'}
-              rowKey={'orgId'}
-              rowSelection={{
-                selectedRowKeys: this.state.rightSelected,
-                onChange: (selectedRowKeys, selectedRows) => {
-                this.setState({
-                  rightSelected: selectedRowKeys, 
-                  rightSelectedRows: selectedRows,
-                  rightIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < targetKeys.length),
-                  rightCheckAll: selectedRowKeys.length === targetKeys.length,
-                  })
-                }
-            }}
-            />
+            <div style={{ height: 412}}>
+              <Search 
+                style={{ margin: '10px 0' }}
+                onSearch={this.rightSearch}
+                placeholder='请输入搜索内容'
+              />
+              <div style={{ height: 380,maxHeight: 380, overflow: 'auto' }}>
+                <Table 
+                  columns={ModalColumns}
+                  pagination={false}
+                  showHeader={false}
+                  loading={rightTableLoading}
+                  dataSource={rightDataSource}
+                  size={'small'}
+                  rowKey={'orgId'}
+                  rowSelection={{
+                    selectedRowKeys: this.state.rightSelected,
+                    onChange: (selectedRowKeys, selectedRows) => {
+                    this.setState({
+                      rightSelected: selectedRowKeys, 
+                      rightSelectedRows: selectedRows,
+                      rightIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < rightDataSource.length),
+                      rightCheckAll: selectedRowKeys.length === rightDataSource.length,
+                      })
+                    }
+                  }}
+                />
+              </div>
+            </div>
           </Col>
         </Row>
       </Modal>
@@ -381,6 +460,7 @@ class Arrange extends PureComponent{
         ref='table'
         url={ysy.SEARCHDEPLOYLIST}
         columns={columns}
+        scroll={{ x: '150%' }}
         query={this.state.query}
         rowKey={'deployId'}
         size={'small'}

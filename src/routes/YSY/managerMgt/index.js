@@ -69,7 +69,8 @@ class ManagerMgt extends PureComponent{
   render(){
     const columns = [{
       title: '账号',
-      dataIndex: 'userNo'
+      dataIndex: 'userNo',
+      width: 180
     },{
       title: '姓名',
       dataIndex: 'userName',
@@ -86,20 +87,23 @@ class ManagerMgt extends PureComponent{
       }
     },{
       title: '部署名称',
-      dataIndex: 'deployName'
+      dataIndex: 'deployName',
+      width: 270
     },{
       title: '机构名称',
-      dataIndex: 'orgName'
+      dataIndex: 'orgName',
+      width: 250
     },{
       title: '备注',
       dataIndex: 'tfRemark',
-      width: 200,
       render: (text,record,index)=>{
         return this.renderColumns(text,record,index,'tfRemark',250)
       }
     },{
       title: '操作',
       dataIndex: 'action',
+      fixed: 'right',
+      width: 150,
       render: (text,record,index) =>{
         return <span>
           <Popconfirm title="是否确认重置该用户密码?" onConfirm={this.resetPwd.bind(null, record)} okText="是" cancelText="否">
@@ -125,7 +129,7 @@ class ManagerMgt extends PureComponent{
           columns={columns}
           rowKey='userId'
           size='small'
-          scroll={{ x: '100%' }}
+          scroll={{ x: '120%' }}
           showHeader={true}
         />
       </div>

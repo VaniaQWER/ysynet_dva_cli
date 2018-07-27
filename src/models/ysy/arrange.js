@@ -5,54 +5,39 @@ export default {
   namespace: 'arrange',
   state: {
     dataSource: [],
-    orgList: [],
-    targetKeys: [],
-    rightTableLoading: false,
-    leftTableLoading: false
+    leftDataSource: [],
+    rightDataSource: [],
   },
   reducers: {
     // 已添加机构/未添加机构
-    orgList(state,action){
+    leftDataSource(state,action){
       let data = action.payload;
       return {
         ...state,
-        orgList: data
+        leftDataSource: data
       }
     },
     rightTarget(state,action){
       return {
         ...state,
-        targetKeys: action.payload
+        rightDataSource: action.payload
       }
     },
     //部署 添加
     transferData(state,action){
       return {
         ...state,
-        orgList: action.payload.orgList,
-        targetKeys: action.payload.targetKeys,
+        leftDataSource: action.payload.leftDataSource,
+        rightDataSource: action.payload.rightDataSource,
       }
     },
     clearTables(state,action){
       return {
         ...state,
-        orgList: [],
-        targetKeys: []
+        leftDataSource: [],
+        rightDataSource: []
       }
     },
-    tableLoading(state,action){
-      if(action.payload.key === 'right'){
-        return {
-          ...state,
-          rightTableLoading: !state.rightTableLoading
-        }
-      }else{
-        return {
-          ...state,
-          leftTableLoading: !state.leftTableLoading
-        }
-      }
-    }
   },
   effects: {
     //新建部署/编辑部署
@@ -66,34 +51,24 @@ export default {
       }
     },
     // 模态框表格搜索
-    *search({payload},{ put, call }){
-      if(payload.flag === '00'){
-        // 右边搜索框搜索
-        yield put({ type: 'tableLoading',payload: { key: 'right' } });
-        const rightData = yield call(arrangeService.finRightOrgList,{ ...payload });
-        yield put({ type: 'tableLoading',payload: { key: 'right' } });
-        if(rightData.status){
-          yield put({ type: 'rightTarget',payload: rightData.result });
-        }else{
-          message.error(rightData.msg||'搜索失败');
-        }
-      }else{
-        yield put({ type: 'tableLoading',payload: { key: 'left' } });
-        const data = yield call(arrangeService.findDeployOrgList,{ ...payload });
-        yield put({ type: 'tableLoading',payload: { key: 'left' } });
+    *search({ payload,callback },{ put, call }){
+      const data = yield call(arrangeService.findDeployOrgList,{ ...payload });
         if(data.status){
-          yield put({ type: 'orgList',payload: data.result })
+          if(callback && payload.flag === '00'){
+            callback({ rightDataSource: data.result.rows, rightTableLoading: false })
+          }else{
+            callback({ leftDataSource: data.result.rows, leftDataCache: data.result.row, leftTableLoading: false});
+          }
         }else{
-          message.error(data.msg||'获取机构失败')
+          message.error(data.msg||'搜索失败');
         }
-      }
     },
     // 模态框部署机构 添加移除  同步方法
     *transfer({ payload },{ put, select }){
       let transferData = payload.data;
       const stateData = yield select(state => state.arrange);
-      let { orgList, targetKeys } = stateData;
-      let data = payload.key === 'add'? targetKeys: orgList;
+      let { leftDataSource, rightDataSource } = stateData;
+      let data = payload.key === 'add'? rightDataSource: leftDataSource;
       let newTarget = [];
       data.map(item => {
         let flag = true;
@@ -109,9 +84,9 @@ export default {
         return null;
       })
       if(payload.key === 'add'){
-        yield put({ type: 'transferData',payload: { orgList: [...orgList,...transferData], targetKeys: [...newTarget]} })
+        yield put({ type: 'transferData',payload: { leftDataSource: [...leftDataSource,...transferData], rightDataSource: [...newTarget]} })
       }else{
-        yield put({ type: 'transferData',payload: { orgList: [...newTarget], targetKeys: []} })
+        yield put({ type: 'transferData',payload: { leftDataSource: [...newTarget], rightDataSource: []} })
       }
     },
 

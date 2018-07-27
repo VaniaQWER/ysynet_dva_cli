@@ -15,16 +15,6 @@ export function findDeployOrgList(options) {
     body: options
   });
 }
-/* 
-  右侧列表搜索  要删除
-*/
-export function finRightOrgList(options) {
-  return request(`${_local}/deploy/finRightOrgList`, {
-    method: 'POST',
-    type: 'formData',
-    body: options
-  });
-}
 
 export function deployModifyOrg(options) {
   return request(`${_local}/deploy/deployModifyOrg`, {//部署编辑机构

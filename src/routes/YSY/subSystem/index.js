@@ -61,7 +61,7 @@ class MenuAddForm extends PureComponent{
   componentWillReceiveProps = nextProps =>{
     if(nextProps.menuInfo.menuId!== this.props.menuInfo.menuId){
       let { menuInfo } = nextProps;
-      this.props.form.setFieldsValue({ menuId: menuInfo.menuId, menuName: menuInfo.menuName,url: menuInfo.url });
+      this.props.form.setFieldsValue({ menuId: menuInfo.menuId, menuName: menuInfo.menuName,routerName: menuInfo.routerName });
     }
   }
   /* static getDerivedStateFromProps(nextProps, prevState){
@@ -139,6 +139,7 @@ class SubSystem extends PureComponent{
     subSystemId: '',// 选中子系统的id 
     system: {},//选中子系统的信息
     query: {},
+    menuDetail: {},// 菜单编号对应的菜单信息
     editData: {}, //编辑时表单内容
     subSystemName: '',
     title: '新增',
@@ -154,7 +155,7 @@ class SubSystem extends PureComponent{
     this.props.dispatch({
       type: 'subSystem/fetchSubsystemList',
       payload: { searchName: value ? value: ''},
-      callback: ()=>this.setState({ loading: false })
+      callback: (data)=>this.setState({ menuData: data, loading: false })
     });
   }
   search = (value) =>{
@@ -283,7 +284,8 @@ class SubSystem extends PureComponent{
     let menuId = e.target.value;
     this.props.dispatch({
       type: 'subSystem/findMenuById',
-      payload: { menuId }
+      payload: { menuId },
+      callback: (menuDetail) => this.setState({ menuDetail })
     });
   }
   onCellChange = (value,record,) => {
@@ -299,15 +301,15 @@ class SubSystem extends PureComponent{
     
   }
   render(){
-    const { newAddVisible, title, isEdit,addMenuVisible, 
+    const { newAddVisible, title, isEdit,addMenuVisible, menuDetail,menuData,
       loading, btnDisable, query, url, selectedKeys, addsystemDisable, deleteBtndisable, editData } = this.state;
-    const { menuData, menuInfo } = this.props.subSystem;
     const columns = [{
       title: '菜单名称',
       dataIndex: 'menuName'
     },{
       title:'菜单编号',
-      dataIndex: 'menuId'
+      dataIndex: 'menuId',
+      width: 100
     },{
       title:'路径',
       dataIndex: 'url'
@@ -359,7 +361,7 @@ class SubSystem extends PureComponent{
       >
         <WrapperMenuForm 
           getMenuInfo={this.getMenuInfo}
-          menuInfo={menuInfo}
+          menuInfo={menuDetail}
           ref={(form) => this.form_menu = form}  
         />
       </Modal>

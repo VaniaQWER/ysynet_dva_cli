@@ -5,30 +5,17 @@ import { message } from 'antd';
 export default {
   namespace: 'subSystem',
   state: {
-    menuInfo: {},
-    menuData: []
+    
   },
   reducers: {
-    fetchSubsystem(state,action){
-      return {
-        ...state,
-        menuData: action.payload
-      }
-    },
-    menuDetail(state,action){
-      return {
-        ...state,
-        menuInfo: action.payload
-      }
-    }
+    
   },
   effects: {
     /* 获取子系统列表 */
     *fetchSubsystemList({ payload, callback },{ put,call }){
       const data = yield call(subSystemService.searchSubSystemTrees, payload);
       if(data.status){
-        yield put({ type: 'fetchSubsystem',payload: data.result });
-        if (callback) callback();
+        if (callback) callback(data.result);
       }else{
         message.error(data.msg||'请求错误')
       }
@@ -70,11 +57,12 @@ export default {
       }
     },
     // 根据menuId 菜单编号 查找菜单信息
-    *findMenuById({ payload },{ put, call }){
+    *findMenuById({ payload,callback },{ put, call }){
+      console.log(payload,'paysf')
       const data = yield call(subSystemService.findMenuById, payload);
       if(data.status){
         if(data.result.menuId){
-          yield put({ type: 'menuDetail',payload: data.result });
+          if(callback) callback(data.result)
         }else{
           message.warning('暂无信息');
         }
