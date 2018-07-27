@@ -11,7 +11,7 @@ class BasicLayout extends PureComponent {
     collapsed: false,
     title: {}
   }
-  componentWillMount = () =>{
+  componentDidMount = () =>{
     this.props.dispatch({
       type:'users/getUserM',
       payload: {}

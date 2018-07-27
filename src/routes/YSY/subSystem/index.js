@@ -51,12 +51,34 @@ class NewAddForm extends PureComponent{
 const WrapAddForm = Form.create()(NewAddForm);
 
 class MenuAddForm extends PureComponent{
+  constructor(props){
+    super(props)
+    this.state = {
+      menuInfo: {},
+      flag: false
+    }
+  }
   componentWillReceiveProps = nextProps =>{
     if(nextProps.menuInfo.menuId!== this.props.menuInfo.menuId){
       let { menuInfo } = nextProps;
       this.props.form.setFieldsValue({ menuId: menuInfo.menuId, menuName: menuInfo.menuName,url: menuInfo.url });
     }
   }
+  /* static getDerivedStateFromProps(nextProps, prevState){
+    if(nextProps.menuInfo.menuId!== prevState.menuInfo.menuId){
+      return {
+        flag: true,
+        menuInfo: nextProps.menuInfo
+      }
+    }
+    return null
+  }
+  componentDidUpdate(prevProps, prevState){
+    if(this.state.flag){
+      let { menuInfo } = this.state;
+      this.props.form.setFieldsValue({ menuId: menuInfo.menuId, menuName: menuInfo.menuName,url: menuInfo.url });
+    }
+  } */
   render(){
     const { getFieldDecorator } = this.props.form;
     return (
@@ -124,7 +146,7 @@ class SubSystem extends PureComponent{
     currentName: '',
     menuData: []
   }
-  componentWillMount = () =>{
+  componentDidMount = () =>{
     this.setState({ loading: true });
     this.genSystemTree();
   }
@@ -390,7 +412,7 @@ class SubSystem extends PureComponent{
                     <span style={{ fontWeight: 'bold' }}> { item.subSystemName } <Icon type="edit" onClick={this.IconEdit.bind(this,item)} className='menuNode_tool'/> </span>
                   </Menu.Item>
                   {
-                    item.children.length
+                    item.children && item.children.length
                     &&
                     item.children.map((menu,index)=>{
                       return <Menu.Item className='ysysnet-accredit-subMenu'

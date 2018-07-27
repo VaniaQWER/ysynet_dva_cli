@@ -8,177 +8,123 @@ const dynamicWrapper = (app, models, component) => dynamic({
 });
 
 // nav data
-// export const getNavData2 = app => [
-//   {
-//     component: dynamicWrapper(app, [], () => import('../layouts/BasicLayout')),
-//     layout: 'BasicLayout',
-//     path: '/',
-//     name: '工作台',
-//     children: [
-//       {
-//         name: "工作台",
-//         icon: 'workplace',
-//         path: 'home',
-//         component: dynamicWrapper(app, [], () => import('../routes/Workplace'))
-//       },
-//       {
-//         name: "医商云",
-//         icon: 'add',
-//         path: 'ysy',
-//         children: [{
-//           name: '菜单管理',
-//           icon: 'add',
-//           path: '/menu',
-//           component: dynamicWrapper(app, ['ysy/menu'], () => import('../routes/YSY/menu')),
-//         },{
-//           name: "子系统管理",
-//           icon: 'add',
-//           path: '/subSystem',
-//           component: dynamicWrapper(app, ['ysy/subSystem'], () => import('../routes/YSY/subSystem'))
-//         },{
-//           name: "部署管理",
-//           icon: 'add',
-//           path: '/arrange',
-//           component: dynamicWrapper(app, ['ysy/arrange'], () => import('../routes/YSY/arrange'))
-//         },{
-//           name: "授权管理",
-//           icon: 'add',
-//           path: '/accredit',
-//           component: dynamicWrapper(app, ['ysy/accredit'], () => import('../routes/YSY/accredit'))
-//         },{
-//           name: "管理员管理",
-//           icon: 'add',
-//           path: '/managerMgt',
-//           component: dynamicWrapper(app, ['ysy/managerMgt'], () => import('../routes/YSY/managerMgt'))
-//         }]
-//       },
-//       {
-//         name: "子系统配置",
-//         icon: 'setting',
-//         path: '/configure',
-//         children: [{
-//           name: "子系统配置",
-//           icon: 'add',
-//           path: '/subSystemConfigure',
-//           component: dynamicWrapper(app, ['config/subSystemConfig'], () => import('../routes/Configure/subSystemConfig'))
-//         },{
-          
-//         }],
-//       },
-//       {
-//         name: "数据字典",
-//         icon: 'setting',
-//         path: 'dictionary',
-//         children: [{
-//           name: "数据字典",
-//           icon: 'setting',
-//           path: '/dictionaryMgt',
-//           component: dynamicWrapper(app, ['dictionary/dictionary'], () => import('../routes/Dictionary/dictionary'))
-//         },{
-//           name: "分类管理",
-//           icon: 'setting',
-//           path: '/classifyMgt',
-//           component: dynamicWrapper(app, ['dictionary/classifyMgt'], () => import('../routes/Dictionary/classify'))
-//         }]
-//       },
-//       {
-//         name: '精细化',
-//         icon: 'setting',
-//         path: 'jxh',
-//         children: [
-//           {
-//             name: '管理员',
-//             icon: 'user',
-//             path: '/manager',
-//             children: [{
-//               name: '子系统管理',
-//               icon: 'setting',
-//               path: '/subSystemMgt',
-//               component: dynamicWrapper(app, ['manager/subSystemMgt'], () => import('../routes/Manager/subSystemMgt'))
-//             },{
-//               name: "子系统管理员",
-//               icon: 'setting',
-//               path: '/subSystemMgter',
-//               component: dynamicWrapper(app, ['manager/subSystemManager'], () => import('../routes/Manager/subSystemManager'))
-//             },{
-//               name: "科室管理",
-//               icon: 'setting',
-//               path: '/dpetMgt',
-//               component: dynamicWrapper(app, ['manager/deptMgt'], () => import('../routes/Manager/deptMgt'))
-//             }]
-//           },{
-//             name: '非临床科室子系统',
-//             icon: 'table',
-//             path: '/flcksSubSystem',
-//             children: [{
-//               name: "配置管理",
-//               icon: 'setting',
-//               path: '/configMgt',
-//               component: dynamicWrapper(app, ['manager/deptMgt'], () => import('../routes/NonClinicalDeptSystem'))
-//             }]
-//         },{
-//             name: '临床科室子系统',
-//             icon: 'table',
-//             path: '/lcksSubSystem',
-//             children: [{
-//               name: "配置管理",
-//               icon: 'setting',
-//               path: '/configMgt',
-//               component: dynamicWrapper(app, ['manager/deptMgt'], () => import('../routes/ClinicalDeptSystem'))
-//             }]
-//         },]
-//       },
-//       {
-//         name: '药库',
-//         icon: 'table',
-//         path: '/drugStorage',
-//         children: [{
-//           name: "配置管理",
-//           icon: 'setting',
-//           path: '/configMgt',
-//           component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/configMgt/drugConfigMgt'))
-//         },
-//         {
-//           name: "药库管理",
-//           icon: 'setting',
-//           path: '/drugStorageManage',
-//           component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/manage/drugDirectory')),
-//           children: [
-//             {
-//               name: "药品目录",
-//               icon: 'setting',
-//               path: '/drugDirectory',
-//               component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/manage/drugDirectory')),
-//               children:[
-//                 {
-//                   name: "药品目录-编辑",
-//                   icon: 'setting',
-//                   path: '/edit',
-//                   component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/manage/drugDirectory/edit'))
-//                 }
-//               ]
-//             },
-           
-//           ]
-//         },
-//       ]},{
-//         name: '药房',
-//         icon: 'table',
-//         path: '/pharmacy',
-//         children: [{
-//           name: '配置管理',
-//           icon: 'setting',
-//           path: '/configMgt',
-//           component: dynamicWrapper(app, [], () => import('../routes/Pharmacy/configMgt'))
-//         }]
-//       }
-//     ]
-//   },
-// ];
-
-
-
 export const getNavData = app => [
+  {
+    component: dynamicWrapper(app, [], () => import('../layouts/BasicLayout')),
+    layout: 'BasicLayout',
+    path: '/',
+    name: '工作台',
+    children: [
+      {
+        name: "工作台",
+        icon: 'workplace',
+        path: 'home',
+        component: dynamicWrapper(app, [], () => import('../routes/Workplace'))
+      },
+      {
+        name: "医商云-菜单管理",
+        icon: 'add',
+        path: 'subsystemMgt/menu',
+        component: dynamicWrapper(app, ['ysy/menu'], () => import('../routes/YSY/menu')),
+      },
+      {
+        name: "医商云-子系统管理",
+        icon: 'add',
+        path: 'subsystemMgt/subSystem',
+        component: dynamicWrapper(app, ['ysy/subSystem'], () => import('../routes/YSY/subSystem'))
+      },
+      {
+        name: "医商云-部署管理",
+        icon: 'add',
+        path: 'subsystemMgt/arrange',
+        component: dynamicWrapper(app, ['ysy/arrange'], () => import('../routes/YSY/arrange'))
+      },
+      {
+        name: "医商云-授权管理",
+        icon: 'add',
+        path: 'subsystemMgt/accredit',
+        component: dynamicWrapper(app, ['ysy/accredit'], () => import('../routes/YSY/accredit'))
+      },
+      {
+        name: "医商云-管理员管理",
+        icon: 'add',
+        path: 'subsystemMgt/managerMgt',
+        component: dynamicWrapper(app, ['ysy/managerMgt'], () => import('../routes/YSY/managerMgt'))
+      },
+      {
+        name: "子系统配置",
+        icon: 'setting',
+        path: '/configMgt/subSystemConfigure',
+        component: dynamicWrapper(app, ['config/subSystemConfig'], () => import('../routes/Configure/subSystemConfig'))
+      },
+      {
+        name: "数据字典-字典管理",
+        icon: 'setting',
+        path: '/itemsDataMgt/itemsData',
+        component: dynamicWrapper(app, ['dictionary/dictionary'], () => import('../routes/Dictionary/dictionary'))
+      },
+      {
+        name: "数据字典--分类管理",
+        icon: 'setting',
+        path: '/itemsDataMgt/classifyMgt',
+        component: dynamicWrapper(app, ['dictionary/dictionary'], () => import('../routes/Dictionary/classify'))
+      },
+      {
+        name: '管理员--子系统管理',
+        icon: 'user',
+        path: '/manager/subSystemMgt',
+        component: dynamicWrapper(app, ['manager/subSystemMgt'], () => import('../routes/Manager/subSystemMgt'))
+      },
+      {
+        name: '管理员--子系统管理员',
+        icon: 'user',
+        path: '/manager/subSystemMgter',
+        component: dynamicWrapper(app, ['manager/subSystemManager'], () => import('../routes/Manager/subSystemManager'))
+      },
+      {
+        name: '管理员--科室管理',
+        icon: 'user',
+        path: '/manager/dpetMgt',
+        component: dynamicWrapper(app, ['manager/deptMgt'], () => import('../routes/Manager/deptMgt'))
+      },
+      {
+        name: '精细化--临床科室子系统--配置管理',
+        icon: 'user',
+        path: '/lcksSubSystem/configMgt',
+        component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/ClinicalDeptSystem/configMgt'))
+      },
+      {
+        name: '精细化--临床科室子系统--用户管理',
+        icon: 'user',
+        path: '/lcksSubSystem/userMgt',
+        component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/ClinicalDeptSystem/userMgt'))
+      },
+      {
+        name: '精细化--临床科室子系统--科室权限',
+        icon: 'user',
+        path: '/lcksSubSystem/deptPower',
+        component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/ClinicalDeptSystem/deptPower'))
+      },
+      {
+        name: '精细化--非临床科室子系统--配置管理',
+        icon: 'user',
+        path: '/flcksSubSystem/configMgt',
+        component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/NonClinicalDeptSystem/configMgt'))
+      },
+      {
+        name: '精细化--非临床科室子系统--用户管理',
+        icon: 'user',
+        path: '/flcksSubSystem/userMgt',
+        component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/NonClinicalDeptSystem/userMgt'))
+      },
+    ]
+  },
+];
+
+
+export const getNavData2 = app => [
+
+// export const getNavData = app => [
   {
   component: dynamicWrapper(app, [], () => import('../layouts/BasicLayout')),
   layout: 'BasicLayout',
@@ -186,90 +132,72 @@ export const getNavData = app => [
   name: '工作台',
   children: [
     /*药库 */
-    /* {
-      name: '药库',
-      icon: 'table',
-      path: '/drugStorage',
-      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/configMgt'))
-    }, */
-    /* {
-      name: "配置管理",//药库-配置管理
-      icon: 'setting',
-      path: '/drugStorage/configMgt',
-      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/configMgt/drugConfigMgt'))
-    },
-    {
-      name: "药库维护",//药库-配置管理
-      icon: 'setting',
-      path: '/drugStorage/drugStroageMaintain',
-      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/configMgt/drugStroageMaintain'))
-    }, */
     /*   
         补货管理  开始
     */
     {
       name: '补货计划',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/replenishmentPlan',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/replenishmentPlan')),
     },
     {
       name: '补货计划添加',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/replenishmentPlan/add',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/replenishmentPlan/add')),
     },
     {
       name: '补货计划详情',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/replenishmentPlan/detail',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/replenishmentPlan/detail')),
     },
     {
       name: '采购计划',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/purchasePlan',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/purchasePlan')),
     },
     {
       name: '采购计划--添加',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/purchasePlan/add',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/purchasePlan/add')),
     },
     {
       name: '采购计划--详情',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/purchasePlan/detail',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/purchasePlan/detail')),
     },
     {
       name: '确认计划',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/confirmPlan',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/confirmPlan')),
     },
     {
       name: '确认计划--详情',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/confirmPlan/detail',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/confirmPlan/detail')),
     },
     {
       name: '配送单验收',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/psListCheck',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/psListCheck')),
     },
     {
       name: '配送单验收--新建',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/psListCheck/add',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/psListCheck/add')),
     },
     {
       name: '配送单验收--详情',
-      icon: 'setting',
+      iocn: 'setting',
       path: '/drugStorage/replenishment/psListCheck/detail',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/replenishment/psListCheck/detail')),
     },
@@ -402,40 +330,12 @@ export const getNavData = app => [
       path: '/drugStorage/checkDecrease/newInventory',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/newInventory')),
     },
-    // 药库 - 盘点损益 - 新建盘点 - 详情(待确认)
-    {
-      name: "新建盘点-详情(待确认)",
-      icon: 'setting',
-      path: '/drugStorage/checkDecrease/newInventory/details',
-      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/newInventory/details')),
-    },
-    // 药库 - 盘点损益 - 新建盘点 - 详情(已确认)
-    {
-      name: "新建盘点-详情(已确认)",
-      icon: 'setting',
-      path: '/drugStorage/checkDecrease/newInventory/detailsConfirm',
-      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/newInventory/detailsConfirm')),
-    },
     // 药库 - 盘点损益 - 盘点审核
     {
       name: "盘点审核",
       icon: 'setting',
       path: '/drugStorage/checkDecrease/inventoryAudit',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/inventoryAudit')),
-    },
-    // 药库 - 盘点损益 - 盘点审核 - 详情(待审核)
-    {
-      name: "盘点审核-详情(待审核)",
-      icon: 'setting',
-      path: '/drugStorage/checkDecrease/inventoryAudit/details',
-      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/inventoryAudit/details')),
-    },
-    // 药库 - 盘点损益 - 盘点审核 - 详情(已审核)
-    {
-      name: "盘点审核-详情(已审核)",
-      icon: 'setting',
-      path: '/drugStorage/checkDecrease/inventoryAudit/detailsConfirm',
-      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/inventoryAudit/detailsConfirm')),
     },
     // 药库 - 盘点损益 - 盘后调整
     {
@@ -444,13 +344,6 @@ export const getNavData = app => [
       path: '/drugStorage/checkDecrease/afterAdjustment',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/afterAdjustment')),
     },
-    // 药库 - 盘点损益 - 盘后调整 - 详情
-    {
-      name: "盘后调整-详情",
-      icon: 'setting',
-      path: '/drugStorage/checkDecrease/afterAdjustment/details',
-      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/afterAdjustment/details')),
-    },
     // 药库 - 盘点损益 - 损益记录
     {
       name: "损益记录",
@@ -458,12 +351,33 @@ export const getNavData = app => [
       path: '/drugStorage/checkDecrease/profiLossRecord',
       component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/profiLossRecord')),
     },
-    // 药库 - 盘点损益 - 损益记录 - 详情
+    //药库 - 库存查询
     {
-      name: "损益记录-详情",
+      name: "库存查询",
+      icon: "setting",
+      path: '/drugStorage/stockInquiry',
+      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/stockInquiry'))
+    },
+    //药库 - 库存查询 - 详情
+    {
+      name: '详情',
+      icon: "setting",
+      path: '/drugStorage/stockInquiry/details',
+      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/stockInquiry/details'))
+    },
+    //药库 - 结算管理
+    {
+      name: '结算管理',
       icon: 'setting',
-      path: '/drugStorage/checkDecrease/profiLossRecord/details',
-      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/checkDecrease/profiLossRecord/details')),
+      path: '/drugStorage/settlementMgt/',
+      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/settlementMgt'))
+    },
+    //药库 - 结算管理 - 详情
+    {
+      name: '详情',
+      icon: 'setting',
+      path: '/drugStorage/settlementMgt/details',
+      component: dynamicWrapper(app, [], () => import('../routes/DrugStorage/settlementMgt/details'))
     },
 
     //药库 - 库存查询

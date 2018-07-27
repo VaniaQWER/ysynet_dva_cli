@@ -7,7 +7,7 @@ export default {
     menuList: [],
     userInfo: {},
     subSystemList: [],
-    orgName: ''
+    subSystem: {}
   },
   reducers: {
     userMenu(state,action){
@@ -28,54 +28,58 @@ export default {
         subSystemList: action.payload
       }
     },
-    orgName(state,action){
+    setSubSystemInfo(state,action){
       return {
         ...state,
-        orgName: action.payload
+        subSystem: action.payload
       }
     }
   },
   effects:{
-    *fetch({ payload },{ call, put, select }){
-      // 判断state 中是否存有 menu 
-      const menu = yield select(state=> state.users);
-      if(menu.menuList.length === 0){
-        const data = yield call(usersService.getUserM);
-        if(data.status){
-          yield put({ type: 'userMenu', payload: data.result });
-        }else{
-          message.error(data.msg|| '获取菜单失败')
-        }
+    *getUserM({ payload,callback },{ call,put }){
+      const data = yield call(usersService.getUserM, payload);
+      if(data.status){
+        yield put({ type: 'userMenu',payload: data.result });
+        if(callback) callback(data.result);
+      }else{
+        message.error(data.msg||'获取3.0菜单失败')
       }
     },
-    *getOrgName({ payload },{ call, put }){
+    // 获取机构名称
+    *getOrgName({ payload, callback },{ call, put }){
       const data = yield call(usersService.getDeployOrgName);
       if(data.status){
-        yield put({ type: 'orgName',payload: data.result });
+        if(callback) callback(data.result);
       }else{
         message.error(data.msg||'获取机构名称失败')
       }
     },
-    *userLogin({ payload, callback }, { call, put }) {  // eslint-disable-line
-      const data = yield call(usersService.login,payload);
-      if(data.status){
-        if (!data.result.userInfo) {
-          message.error(data.result.loginResult)
-        }else{
-          if(!data.result.subSystemFlag){
-            yield put({ type: 'getSubSystem' })
-          }
-          if(callback) callback();
-          yield put({ type: 'userInfo',payload: data.result })
-        }
-      }
+    
+    // 登陆保存用户信息
+    *setUserInfo({ payload },{ put }){
+      yield put({ type: 'userInfo', payload })
     },
+    
+    // 获取子系统
     *getSubSystem({ payload, callback },{ put,call }){
       const data = yield call(usersService.getUserSubSystem, payload );
       if(data.status){
-        if (callback) callback();
+        if (callback) callback(data.result);
         yield put({ type: 'subSystem',payload: data.result })
       }
+    },
+    // 获取用户 模块和 权限 
+    *findMenusByUser({ payload, callback },{ call, put }){
+      const data = yield call(usersService.findMenusByUser, payload);
+      if(data.status){
+        yield put({ type: 'userMenu',payload: data.result })
+        if (callback) callback(data.result);
+      }else{
+        message.error(data.msg||'获取用户模块和权限失败')
+      }
+    },
+    *subsystemInfo({ payload },{ put }){
+      yield put({ type: 'setSubSystemInfo',payload })
     }
     
   },

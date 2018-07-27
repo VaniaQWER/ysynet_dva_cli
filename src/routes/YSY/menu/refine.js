@@ -2,18 +2,17 @@
   精细化平台 Tab
 */
 import React, { PureComponent } from 'react';
-import { Input, Switch } from 'antd';
+import { Input, Select } from 'antd';
 import RemoteTable from '../../../components/TableGrid';
 import EditableCell from '../../../components/EditableCell';
 import ysy from '../../../api/ysy'
 import { connect } from 'dva';
 const { Search } = Input;
-const openTilte = '是否确认开启此状态?';
-// const closeTitle = '是否确认关闭此状态?';
+const { Option } = Select;
+
 class Refine extends PureComponent{
   state = {
-    title: openTilte,
-    isopen: false,
+    record: {}
   }
   onCellChange = (value,record,) => {
     let values = {};
@@ -25,6 +24,10 @@ class Refine extends PureComponent{
       callback: () => this.refs.table.fetch()
     })
   }
+  edit = (record,index) =>{
+    console.log(record,index,'index');
+    this.setState({ record: {...record, editable: true, index} });
+  }
   render(){
     const columns = [{
       title: '菜单名称',
@@ -32,7 +35,7 @@ class Refine extends PureComponent{
       dataIndex: 'menuName'
     },{
       title:'菜单编号',
-      width: '20%',
+      width: '15%',
       dataIndex: 'menuId'
     },{
       title:'路径',
@@ -41,26 +44,28 @@ class Refine extends PureComponent{
     },{
       title:'状态',
       dataIndex: 'fstate',
-      width: 100,
-      render:(text,record) =>{
+      width: 150,
+      render:(text,record,index) =>{
         return (
-        // <Popconfirm title={this.state.isopen ? '是否确认开启此状态':'是否确认关闭此状态?'} okText="是" cancelText="否">
-            <Switch  
-              checkedChildren="开" unCheckedChildren="关"
-              defaultChecked={text === '01' ? true: false}
-              onFocus={(e)=>console.log(e.target.checked)}
-              onChange={(checked)=>console.log(checked,'checked')}
-              /* onChange={(e)=>{
-                this.setState({ isopen:this.state.isopen })
-              }} */
-            />
-        // </Popconfirm>
+          <div>
+            <Select
+              style={{ width: 80 }} 
+              defaultValue={text}
+              disabled={true}
+            >
+              <Option key={-1} value='00'>关闭</Option>
+              <Option key={1} value='01'>开启</Option>
+            </Select>
+            <a style={{ marginLeft: 8 }} 
+              onClick={this.edit.bind(null,record,index)}>
+              {this.state.record.index === index ? '保存':'编辑' }</a>
+          </div>
         )
       }
     },{
       title:'备注',
       dataIndex: 'tfRemark',
-      width: 280,
+      width: 300,
       render: (text,record,index)=>{
         return (
           <EditableCell

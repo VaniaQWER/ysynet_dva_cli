@@ -9,15 +9,24 @@ class EditableCell extends PureComponent {
     editable: false,
     max:this.props.max
   }
+  static getDerivedStateFromProps(nextProps, prevState){
+    if(prevState.value !== nextProps.value && !prevState.editable){
+      return {
+        value: nextProps.value,record: nextProps.record
+      }
+    }
+    return null;
+  }
   handleChange = (e) => {
     const value = e.target.value;
     this.setState({ value });
   }
-  componentWillReceiveProps = nextProps =>{
+  
+  /* componentWillReceiveProps = nextProps =>{
       if(nextProps.value !== this.state.value && !this.state.editable){
           this.setState({ value: nextProps.value,record: nextProps.record});
       }
-  }
+  } */
   check = () => {
     if(this.state.value.length>this.state.max){
         return  message.warning('字符长度不能超过'+this.state.max);

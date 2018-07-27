@@ -41,7 +41,7 @@ class JXHPlate extends PureComponent{
     visible: false,
     loading: false
   }
-  componentWillMount = () =>{
+  componentDidMount = () =>{
     this.genSubSystemList();
   }
   genSubSystemList = () =>{
@@ -143,6 +143,7 @@ class JXHPlate extends PureComponent{
     const columns = [{
       title: '编号',
       dataIndex: 'No',
+      width: 90,
       render: (text,record,index)=>{
         return index + 1;
       }

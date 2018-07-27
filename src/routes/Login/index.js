@@ -1,21 +1,24 @@
 import React, { PureComponent } from 'react';
 import { Form, Button, Checkbox, Input, Icon, message } from 'antd';
 import { connect } from 'dva';
-// import querystring from 'querystring';
-// import shajs from 'sha.js'
-// import ysy from '../../api/ysy';
+import querystring from 'querystring';
+import sha1 from 'sha1';
+import md5 from 'md5';
+import ysy from '../../api/ysy';
 import styles from './style.css';
 const FormItem = Form.Item;
 
 class Login extends PureComponent{
   state = {
-    loading: false
+    loading: false,
+    orgName: ''
   }
-  componentWillMount = () =>{
-    /* this.props.dispatch({
+  componentDidMount = () =>{
+    this.props.dispatch({
       type: 'users/getOrgName',
       payload: {},
-    }) */
+      callback: (data) => this.setState({ orgName: data  })
+    })
   }
   handleSubmit = (e) =>{
     e.preventDefault();
@@ -23,63 +26,80 @@ class Login extends PureComponent{
       if(!err){
         this.setState({ loading: true });
         const { userName, password } = values;
-        // const userInfo = {
-        //   userNo: userName, 
-        //   pwd: shajs('sha256').update(password).digest('hex'),
-        //   // token: 'vania'
-        // }
-        if ( userName === 'admin' &&  password === 'admin' ) {
-          setTimeout(()=>{
-            this.setState({ loading: false  })
-            this.props.history.push({ pathname: '/subSystem' })
-          },500)
-        } else {
-          this.setState({ loading: false  })
-          message.error('账号或密码错误！');
+        let arr = [md5(password.toString()).substring(2, md5(password.toString()).length).toUpperCase(), 'vania']
+        let pwd = '';
+        arr.sort().map( (item, index) => {
+          return pwd += item;
+        })
+        const userInfo = {
+          userNo: userName, 
+          pwd: sha1(pwd),
+          token: 'vania'
         }
-        // this.setState({ loading: false });
-        // fetch(ysy.USERLOGIN,{
-        //   credentials: 'include',
-        //   method: 'post',
-        //   headers: {
-        //     'Content-Type': 'application/x-www-form-urlencoded'
-        //   },
-        //   body: querystring.stringify(userInfo)
-        // })
-        // .then((res)=>res.json())
-        // .then((data)=>{
-        //   this.setState({ loading: false });
-        //   if(!data.result.loginResult){
-        //     message.error(data.result.loginResult)
-        //   }else{
-        //     if(!data.result.subSystemFlag){
-        //       // 跳转到选择子系统页面
-        //       this.props.dispatch({
-        //         type: 'users/getSubSystem',
-        //         payload: {},
-        //         callback: () => {
-        //           this.props.dispatch({
-        //             type: 'users/fetch',
-        //             payload: {}
-        //           });
-        //           this.props.history.push({ pathname: '/subSystem' })
-        //         }
-        //       })
-        //     }else{
-        //       this.props.dispatch({
-        //         type: 'users/fetch',
-        //         payload: {}
-        //       });
-        //       this.props.history.push({ pathname: '/home' });
-        //     }
-        //   }
-        // })
+        fetch(ysy.USERLOGIN,{
+          credentials: 'include',
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: querystring.stringify(userInfo)
+        })
+        .then((res)=>res.json())
+        .then((data)=>{
+          this.setState({ loading: false });
+          if(!data.result.loginResult){
+            message.error(data.result.loginResult)
+          }else{
+            this.props.dispatch({
+              type: 'users/setUserInfo',
+              payload: data.result.userInfo
+            })
+
+            if(data.result.subSystemFlag === undefined){
+              // undefined  没有subSystemFlag  标识 请求3.0 接口
+              this.props.dispatch({
+                type: 'users/getUserM',
+                payload: {},
+                callback: (data)=>{
+                  let path = data[0].subMenus[0].path;
+                  this.props.history.push({ pathname: path });
+                }
+              })
+            }else{
+              if(!data.result.subSystemFlag){
+                // 跳转到选择子系统页面
+                this.props.dispatch({
+                  type: 'users/getSubSystem',
+                  payload: {},
+                  callback: () => {
+                    this.props.history.push({ pathname: '/subSystem' })
+                  }
+                })
+              }else{
+                let { subSystemId, deptGuid } = data.result.userInfo
+                this.props.dispatch({
+                  type: 'users/findMenusByUser',
+                  payload: { subSystemId, deptGuid },
+                  callback: (data)=>{
+                    let path = data[0].subMenus[0].path;
+                    this.props.history.push({ pathname: path });
+                    this.props.dispatch({
+                      type: 'users/subsystemInfo',
+                      payload: { subSystemId, deptGuid }
+                    })
+                  }
+                });
+              }
+            }
+           
+          }
+        })
       }
     })
   }
   render(){
     const { getFieldDecorator } = this.props.form;
-    // const { orgName } = this.props.users;
+    // const { orgName } = this.state;
     const wrapperLayout = {
       wrapperCol:{ span: 15, offset: 5 }
     }

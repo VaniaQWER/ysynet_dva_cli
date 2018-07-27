@@ -3,13 +3,28 @@ import { List, Input, Button, Spin, Menu, Row, Col, Modal, message  } from 'antd
 import { connect } from 'dva';
 const { Search } = Input;
 class Accredit extends PureComponent{
-  componentWillMount = () =>{
+  constructor(props){
+    super(props)
+    this.state = {
+      dataSource: [],
+      treeLoading: false,
+      selectedSystemInfo: {},// 选中的授权 或 子系统 信息
+      subLoading: false, // 授权子系统loading
+      baseData: {},
+      selectedSubSystem: [], // 已授权的子系统
+      modalSubSystemList: [], // 模态框子系统列表
+      visible: false,
+    }
+  }
+  componentDidMount = () =>{
     this.genDeployList();
   }
   genDeployList = (value) =>{
+    this.setState({ treeLoading: true })
     this.props.dispatch({
       type: 'accredit/deployList',
-      payload: { searchLike: value ? value: '' }
+      payload: { flag: '00', searchLike: value ? value: '' },
+      callback: (data) => this.setState({ dataSource: data,treeLoading: false })
     });
   }
   onSearch = (value) =>{
@@ -17,36 +32,34 @@ class Accredit extends PureComponent{
   }
   handleClick = (e) => {
     let deployId = e.item.props.deployid;
-    let { dataSource } = this.props.accredit;
+    let { dataSource } = this.state;
     let target = dataSource.filter(item=> item.deployId === deployId)[0];
-    // 同步显示右侧部署信息
-    this.props.dispatch({
-      type: 'accredit/showTargetDetail',
-      payload: target
-    });
+    this.setState({ baseData: target  });
     let orgId = e.key;
     let deployName = e.item.props.deployname;
-    // 异步获取授权子系统
+    this.setState({ subLoading: true });
+    let values = {};
+    values.deployId = deployId;
     if(deployId && deployName){
-      console.log('subMenu','子系统授权');
-      this.props.dispatch({
-        type: 'accredit/searchSubSystemList',
-        payload: { deployId: deployId, orgId: orgId }
-      })
-    }else{
-      console.log('main','部署授权')
-      this.props.dispatch({
-        type: 'accredit/searchSubSystemList',
-        payload: { deployId: deployId }
-      })
+      values.orgId = orgId;
     }
+    this.setState({ selectedSystemInfo: values });
+    // 异步获取授权子系统
+    this.searchSubSystemList(values)
+  }
+  searchSubSystemList = (values) =>{
+    this.props.dispatch({
+      type: 'accredit/searchSubSystemList',
+      payload: values,
+      callback: (data)=>{
+        let selectedSubSystem = data.filter(item => item.relFlag === '01');
+        this.setState({ subSystemList: data, modalSubSystemList: data, subLoading: false, selectedSubSystem });
+      }
+    })
   }
   edit = () =>{
-    if(this.props.accredit.selectedSystem.deployId){
-      this.props.dispatch({
-        type: 'accredit/showModal',
-        payload: {}
-      })
+    if(this.state.selectedSystemInfo.deployId){
+      this.setState({ visible: true });
     }else{
       message.warning('请选择一个部署或子系统')
     }
@@ -56,13 +69,15 @@ class Accredit extends PureComponent{
     if(relFlag === '01'&& synFlag === '01'){
       return;
     }
-    this.props.dispatch({
-      type: 'accredit/flagChange',
-      payload: item
-    })
+    let { modalSubSystemList } = this.state;
+    let newData = [...modalSubSystemList ];
+    let index = newData.findIndex(list=> list.subSystemId === item.subSystemId);
+    newData[index].relFlag = newData[index].relFlag === '00'? '01': '00';
+    this.setState({ modalSubSystemList: newData });
   }
   modifySystem = () =>{
-    const { modalSubSystemList,selectedSystem } = this.props.accredit;
+    this.setState({ dirtyClick: true });
+    const { modalSubSystemList,selectedSystemInfo } = this.state;
     let subSystemIds = [];
     modalSubSystemList.map(item => {
       if(item.relFlag === '01'){
@@ -70,18 +85,21 @@ class Accredit extends PureComponent{
       }
       return null;
     });
-    let values = { ...selectedSystem };
+    let values = { ...selectedSystemInfo };
     values.subSystemIds = subSystemIds; 
     console.log(values,'values')
     this.props.dispatch({
       type: 'accredit/modifySubSystem',
-      payload: values
+      payload: values,
+      callback: (data)=>{
+        this.setState({ dirtyClick: false, visible: false });
+        this.searchSubSystemList(selectedSystemInfo)
+      }
     })
   }
   render(){
-    const { dataSource, loading, subLoading, baseData, subSystemList, modalSubSystemList, visible,dirtyClick } = this.props.accredit;
-    let relSubSystem = subSystemList.filter(item=> item.relFlag === '01');
-    // console.log(selectedSystem,'selectedSystem')
+    const { dataSource, treeLoading, baseData, subLoading, selectedSubSystem, 
+      modalSubSystemList, visible, dirtyClick } = this.state;
     return (
       <div className='ysynet-siderMenu-noborder'>
         <div style={{ background: '#fff',display: 'flex' }}>
@@ -91,7 +109,7 @@ class Accredit extends PureComponent{
               placeholder='部署/机构名称'
               onSearch={this.onSearch}
             />
-            <Spin spinning={loading}>
+            <Spin spinning={treeLoading}>
               <List
                 itemLayout='vertical'
                 dataSource={dataSource}
@@ -190,12 +208,12 @@ class Accredit extends PureComponent{
                 </div>
                 <Spin spinning={subLoading} style={{ marginTop: 24 }}>
                   {
-                    relSubSystem.length ?
+                    selectedSubSystem.length ?
                     <List
                       style={{ marginTop: 24 }}
                       className='ysy-accredit-list'
                       grid={{ gutter: 16, column: 4 }}
-                      dataSource={relSubSystem}
+                      dataSource={selectedSubSystem}
                       renderItem={item => (
                         <List.Item>
                           <div className='ysy-accredit-card'>
@@ -211,14 +229,14 @@ class Accredit extends PureComponent{
                 </Spin>
                 <Modal
                   visible={visible}
-                  onCancel={()=>this.edit()}
+                  onCancel={()=>this.setState({ visible:false })}
                   title='编辑'
                   width={726}
                   footer={[
                     <Button key="submit" type='primary' loading={dirtyClick} onClick={this.modifySystem}>
                         确认
                     </Button>,
-                    <Button key="back"  type='default' onClick={()=>this.edit()}>取消</Button>
+                    <Button key="back"  type='default' onClick={()=>this.setState({ visible:false })}>取消</Button>
                   ]}
                 >
                   <List

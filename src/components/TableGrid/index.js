@@ -8,12 +8,25 @@ class RemoteTable extends Component {
     super(props)
     this.defaultPageSize = window.screen.height >= 1080 ? 20 : 10
     this.state = {
+      flag: null,
       data: [],
       pagination: {},
       loading: false,
       searchParams: {}
     }
   }
+  /* static getDerivedStateFromProps(nextProps, prevState){
+    if ((nextProps.url !== prevState.url) || 
+      (typeof nextProps.query === 'string' ? nextProps.query !== prevState.query : !objCompare(nextProps.query, prevState.query))) {
+        return {
+          flag: null,
+          query: nextProps.query,
+          url: nextProps.url
+        }
+        // this.fetch(nextProps.query, nextProps.url)
+    }
+    return null;
+  } */
   componentWillReceiveProps = (nextProps) => {
     if ((nextProps.url !== this.props.url) || 
       (typeof nextProps.query === 'string' ? nextProps.query !== this.props.query : !objCompare(nextProps.query, this.props.query))) {
