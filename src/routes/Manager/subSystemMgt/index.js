@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { Input, Row, Col, Button, Modal,Table, Checkbox } from 'antd';
+import { Input, Row, Col, Button, Modal,Table, Checkbox, message } from 'antd';
 import RemoteTable from '../../../components/TableGrid';
 import EditableCell from '../../../components/EditableCell';
 import { connect } from 'dva';
@@ -29,23 +29,54 @@ class SubSystemMgt extends PureComponent{
     leftLoading: false, // 搜索左边 表格loading 
     rightLoading: false,  // 右边 loading
     selected: [], // 系统菜单选中 keys
-    selectedRows: []
+    selectedRows: [],
+    leftDataSource: [],// 模态框管理员关联列表 左侧列表  已选
+    rightDataSource: [], // 右侧列表  未选 
+    leftSearchData: [],
+    leftCacheData: [],
+    rightCacheData: [],
+    systemMenuList: [],
   }
   manager = (record) =>{
     this.setState({ record });
     this.props.dispatch({
       type: 'subSystemMgt/getSubSystemsManager',
       payload: { deployOrgSubSystemGuid: record.deployOrgSubSystemGuid },
-      callback: ()=>this.setState({ visible: true })
+      callback: (data) => {
+        let leftDataSource = [], rightDataSource = []; 
+        data.map(item => {
+          if(item.isSelected === 1){
+            leftDataSource.push(item);
+          }else{
+            rightDataSource.push(item);
+          }
+          return null;
+        })
+        this.setState({ visible: true, leftDataSource, leftCacheData: leftDataSource,
+           rightDataSource,rightCacheData: rightDataSource })
+      }
     })
   }
   leftSearch = (value) =>{
     this.setState({ leftLoading: true });
-    this.search('left',value);
+    let { leftCacheData,leftDataSource } = this.state;
+    if(value){
+      let newData = leftDataSource.filter(item=> item.userName.includes(value));
+      this.setState({ leftDataSource: newData,leftLoading: false });
+    }else{
+      this.setState({ leftDataSource: leftCacheData, leftLoading: false })
+    }
   }
   rightSearch = (value) =>{
+    console.log(value,'value')
     this.setState({ rightLoading: true });
-    this.search('right',value);
+    let { rightCacheData, rightDataSource } = this.state;
+    if(value){
+      let newData = rightDataSource.filter(item=> item.userName.includes(value));
+      this.setState({ rightDataSource: newData, rightLoading: false });
+    }else{
+      this.setState({ rightDataSource: rightCacheData, rightLoading: false })
+    }
   }
   search = (dir,value) =>{
     this.props.dispatch({
@@ -55,20 +86,58 @@ class SubSystemMgt extends PureComponent{
     })
   }
   addUser = () =>{
-    console.log(this.state.rightSelected,'rightSelected');
     this.setState({ addLoading: true });
+    let { leftDataSource, rightDataSource, rightSelectedRows } = this.state;
+    let newLeftData = [ ...leftDataSource, ...rightSelectedRows];
+    let  newRightData = [];
+    rightDataSource.map(item => {
+      let flag = true;
+      rightSelectedRows.map((list,idx)=>{
+        if(item.userId === list.userId){
+          flag = false;
+        }
+        return null;
+      });
+      if(flag){
+        newRightData.push(item)
+      }
+      return null;
+    });
     this.props.dispatch({
       type: 'subSystemMgt/addUser',
       payload: { userIds: this.state.rightSelected, deployOrgSubSystemGuid: this.state.record.deployOrgSubSystemGuid },
-      callback: ()=>this.setState({ addLoading: false,rightSelected: [],rightCheckAll: false })
+      callback: ()=>this.setState({ addLoading: false,rightSelected: [],rightCheckAll: false,
+        leftDataSource: newLeftData, leftCacheData: newLeftData, rightDataSource: newRightData,rightCacheData: newRightData })
     })
   }
   removeUser = () =>{
+    let { leftDataSource, rightDataSource, leftSelectedRows, leftSelected } = this.state;
+    if(leftDataSource.length === leftSelected.length){
+      return message.warning('请保留至少一个子系统管理员')
+    }
+    let newRightData = [...rightDataSource, ...leftSelectedRows];
+    let newLeftData = [];
+    leftDataSource.map(item => {
+      let flag = true;
+      leftSelectedRows.map((list,idx)=>{
+        if(item.userId === list.userId){
+          flag = false;
+        }
+        return null;
+      });
+      if(flag){
+        newLeftData.push(item)
+      }
+      return null;
+    });
+    console.log(newLeftData,'newLeftData')
     this.setState({ removeLoading: true });
     this.props.dispatch({
       type: 'subSystemMgt/removeUser',
       payload: { userIds: this.state.leftSelected, deployOrgSubSystemGuid: this.state.record.deployOrgSubSystemGuid },
-      callback: ()=>this.setState({ removeLoading: false,leftSelected: [],leftCheckAll: false })
+      callback: ()=>this.setState({ removeLoading: false,leftSelected: [],leftCheckAll: false,
+        leftDataSource: newLeftData,leftCacheData: newLeftData,rightDataSource: newRightData,rightCacheData: newRightData
+       })
     })
   }
   onLeftCheckAllChange = (e) => {
@@ -98,7 +167,31 @@ class SubSystemMgt extends PureComponent{
     this.props.dispatch({
       type: 'subSystemMgt/getSubsystemMenu',
       payload: { deployOrgSubSystemGuid: record.deployOrgSubSystemGuid },
-      callback: () =>this.setState({ menuVisible: true })
+      callback: (data) =>{
+        let selected = [];
+        data.map((item,index)=>{
+          if(item.isSelected === 1){
+            selected.push(item.id);
+            if(item.children.length){
+              item.children.map((child,idx)=>{
+                selected.push(child.id);
+                return null;
+              });
+            }
+          }else{
+            if(item.children.length){
+              item.children.map((child,idx)=>{
+                if(child.isSelected === 1){
+                  selected.push(child.id);
+                }
+                return null
+              })
+            }
+          }
+          return null;
+        });
+        this.setState({ menuVisible: true, systemMenuList: data, selected })
+      }
     })
   }
   onCellChange = (value,record,columns) => {
@@ -113,31 +206,8 @@ class SubSystemMgt extends PureComponent{
     })
   }
   render(){
-    const { leftDataSource, rightDataSource, systemMenuList } = this.props.subSystemMgt;
-    const { visible, menuVisible, leftLoading, rightLoading, addLoading, removeLoading } = this.state;
-    let selected = [];
-    systemMenuList.map((item,index)=>{
-      if(item.isSelected === '1'){
-        selected.push(item.id);
-        if(item.children.length){
-          item.children.map((child,idx)=>{
-            selected.push(child.id);
-            return null;
-          });
-        }
-      }else{
-        if(item.children.length){
-          item.children.map((child,idx)=>{
-            if(child.isSelected === '1'){
-              selected.push(child.id);
-            }
-            return null
-          })
-        }
-      }
-      return null;
-    });
-    console.log(selected,'selected')
+    const { visible, menuVisible, leftLoading, rightLoading, addLoading, removeLoading, 
+      leftDataSource, rightDataSource, systemMenuList, selected } = this.state;
     const columns = [{
       title: '系统名称',
       dataIndex: 'subSystemName'
@@ -217,12 +287,13 @@ class SubSystemMgt extends PureComponent{
           className='ysynet-ant-modal'
           title='管理员'
           visible={visible}
+          style={{ top: 20 }}
           width={1100}
           onCancel={()=>this.setState({ visible: false })}
           footer={null}
         >
           <Row className='ysynet-transfer'>
-            <Col span={10} offset={1}>
+            <Col span={11} >
               <div className='ysynet-transfer-header'>
                 <div>
                   <Checkbox 
@@ -237,31 +308,35 @@ class SubSystemMgt extends PureComponent{
                   <span><span>{this.state.leftSelected.length ? `${this.state.leftSelected.length}/`:'' }</span>{leftDataSource.length}</span>
                 </div>
               </div>
-              <Search 
-                style={{ margin: '10px 0' }}
-                placeholder='请输入搜索内容'
-                onSearch={this.leftSearch}
-              />
-              <Table 
-                dataSource={leftDataSource}
-                columns={ModalColumns}
-                loading={leftLoading}
-                pagination={false}
-                showHeader={false}
-                size={'small'}
-                rowKey={'userId'}
-                rowSelection={{
-                  selectedRowKeys: this.state.leftSelected,
-                  onChange: (selectedRowKeys, selectedRows) => {
-                  this.setState({
-                    leftSelected: selectedRowKeys,
-                    leftSelectedRows: selectedRows,
-                    LeftIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < leftDataSource.length),
-                    leftCheckAll: selectedRowKeys.length === leftDataSource.length,
-                    })
-                  }
-              }}
-              />
+              <div style={{ height: 412 }}>
+                <Search 
+                  style={{ margin: '10px 0' }}
+                  placeholder='请输入搜索内容'
+                  onSearch={this.leftSearch}
+                />
+                 <div style={{ height: 380,maxHeight: 380, overflow: 'auto' }}>
+                  <Table 
+                      dataSource={leftDataSource}
+                      columns={ModalColumns}
+                      loading={leftLoading}
+                      pagination={false}
+                      showHeader={false}
+                      size={'small'}
+                      rowKey={'userId'}
+                      rowSelection={{
+                        selectedRowKeys: this.state.leftSelected,
+                        onChange: (selectedRowKeys, selectedRows) => {
+                        this.setState({
+                          leftSelected: selectedRowKeys,
+                          leftSelectedRows: selectedRows,
+                          LeftIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < leftDataSource.length),
+                          leftCheckAll: selectedRowKeys.length === leftDataSource.length,
+                          })
+                        }
+                      }}
+                    />
+                 </div>
+              </div>
             </Col>
             <Col span={2} style={{ textAlign:'center',alignSelf:'center' }}>
               <Button type='primary'
@@ -274,7 +349,7 @@ class SubSystemMgt extends PureComponent{
                 disabled={this.state.leftSelected.length === 0 ? true : false} 
                 onClick={this.removeUser}>移除</Button>
             </Col>
-            <Col span={10}>
+            <Col span={11}>
               <div className='ysynet-transfer-header'>
                 <div>
                   <Checkbox 
@@ -286,30 +361,35 @@ class SubSystemMgt extends PureComponent{
                   <span style={{ marginLeft: 16 }}>未添加人员</span>
                 </div>
               </div>
-              <Search 
-                style={{ margin: '10px 0' }}
-                onSearch={this.rightSearch}
-                placeholder='请输入搜索内容'/>
-              <Table 
-                columns={ModalColumns}
-                pagination={false}
-                showHeader={false}
-                loading={rightLoading}
-                dataSource={rightDataSource}
-                size={'small'}
-                rowKey={'userId'}
-                rowSelection={{
-                  selectedRowKeys: this.state.rightSelected,
-                  onChange: (selectedRowKeys, selectedRows) => {
-                  this.setState({
-                    rightSelected: selectedRowKeys, 
-                    rightSelectedRows: selectedRows,
-                    rightIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < rightDataSource.length),
-                    rightCheckAll: selectedRowKeys.length === rightDataSource.length,
-                    })
-                  }
-              }}
-              />
+              <div style={{ height: 412}}>
+                <Search 
+                  style={{ margin: '10px 0' }}
+                  onSearch={this.rightSearch}
+                  placeholder='请输入搜索内容'
+                />
+                <div style={{ height: 380,maxHeight: 380, overflow: 'auto' }}>
+                  <Table 
+                    columns={ModalColumns}
+                    pagination={false}
+                    showHeader={false}
+                    loading={rightLoading}
+                    dataSource={rightDataSource}
+                    size={'small'}
+                    rowKey={'userId'}
+                    rowSelection={{
+                      selectedRowKeys: this.state.rightSelected,
+                      onChange: (selectedRowKeys, selectedRows) => {
+                      this.setState({
+                        rightSelected: selectedRowKeys, 
+                        rightSelectedRows: selectedRows,
+                        rightIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < rightDataSource.length),
+                        rightCheckAll: selectedRowKeys.length === rightDataSource.length,
+                        })
+                      }
+                    }}
+                  />
+                </div> 
+              </div>
             </Col>
           </Row>
         </Modal>
@@ -317,6 +397,7 @@ class SubSystemMgt extends PureComponent{
           title='系统菜单'
           visible={menuVisible}
           width={1100}
+          style={{ top: 20 }}
           onCancel={()=>this.setState({ menuVisible: false })}
           footer={[
             <Button key="submit" type='primary' onClick={this.modifySystem}>

@@ -70,8 +70,14 @@ export function addOrUpdate(options){
 /* 
   科室管理相关
 */
-export function insertOrmodify(options){
-  return request(`${_local}/departmentController/insertOrgDept`,{ //精细化-- 科室管理  编辑/新增 机构科室
+export function insertOrgDept(options){
+  return request(`${_local}/departmentController/insertOrgDept`,{ //精细化-- 科室管理  新增 机构科室
+    methods: 'POST',
+    body: options
+  })
+}
+export function updateOrgDept(options){
+  return request(`${_local}/departmentController/updateDept4kehu`,{ //精细化-- 科室管理  编辑 机构科室
     methods: 'POST',
     body: options
   })

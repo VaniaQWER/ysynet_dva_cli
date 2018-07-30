@@ -1,8 +1,8 @@
 /* 
   精细化平台 Tab
 */
-import React, { PureComponent } from 'react';
-import { Input, Select } from 'antd';
+import React from 'react';
+import { Input, Select,Modal } from 'antd';
 import RemoteTable from '../../../components/TableGrid';
 import EditableCell from '../../../components/EditableCell';
 import ysy from '../../../api/ysy'
@@ -10,9 +10,10 @@ import { connect } from 'dva';
 const { Search } = Input;
 const { Option } = Select;
 
-class Refine extends PureComponent{
+class Refine extends React.Component{
   state = {
-    record: {}
+    record: {},
+    flag: true
   }
   onCellChange = (value,record,) => {
     let values = {};
@@ -24,9 +25,41 @@ class Refine extends PureComponent{
       callback: () => this.refs.table.fetch()
     })
   }
-  edit = (record,index) =>{
-    console.log(record,index,'index');
-    this.setState({ record: {...record, editable: true, index} });
+  optionSelect = (value) =>{
+    console.log(value,'value')
+    let content= value === '00'? '是否确认关闭?': '是否确认开启?';
+    const that = this;
+    Modal.confirm({
+      title: '确认',
+      content: content,
+      onOk(){
+        let values = {};
+        values.menuId = that.state.record.menuId;
+        values.fstate = value;
+        console.log(values,'values')
+        that.props.dispatch({
+          type: 'menu/modifyMenu',
+          payload: values,
+          callback: () => that.refs.table.fetch()
+        })
+      },
+      onCancel(){
+
+      }
+    })
+  }
+  onFocus = (record) =>{
+    this.setState({ record, flag: true });
+  }
+  onBlur = () =>{
+    console.log('onBlur')
+    this.setState({ flag: false });
+  }
+  shouldComponentUpdate = () =>{
+    if(!this.state.flag){
+      return true;
+    }
+    return false;
   }
   render(){
     const columns = [{
@@ -44,21 +77,19 @@ class Refine extends PureComponent{
     },{
       title:'状态',
       dataIndex: 'fstate',
-      width: 150,
+      width: 100,
       render:(text,record,index) =>{
         return (
           <div>
             <Select
               style={{ width: 80 }} 
-              defaultValue={text}
-              disabled={true}
+              value={text}
+              onFocus={()=>this.onFocus(record)}
+              onSelect={this.optionSelect}
             >
               <Option key={-1} value='00'>关闭</Option>
               <Option key={1} value='01'>开启</Option>
             </Select>
-            <a style={{ marginLeft: 8 }} 
-              onClick={this.edit.bind(null,record,index)}>
-              {this.state.record.index === index ? '保存':'编辑' }</a>
           </div>
         )
       }

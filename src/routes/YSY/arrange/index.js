@@ -300,7 +300,7 @@ class Arrange extends PureComponent{
             this.setState({ title: '编辑部署', record,isEdit: true,addVisible: true })
           }}>编辑</a>
           <a style={{ marginLeft: 8 }} onClick={()=>{
-            this.setState({ record,arrangeVisible: true })
+            this.setState({ record,arrangeVisible: true, rightDataSource: [],rightSearchValue: '',leftSearchValue: '' })
             this.clearTable();
             this.searchLeftOrgList(record);
           }}>部署机构</a>
@@ -352,6 +352,7 @@ class Arrange extends PureComponent{
         className='ysynet-ant-modal'
         title='部署机构'
         width={1100}
+        style={{ top: 20 }}
         visible={arrangeVisible}
         onCancel={()=>this.setState({ arrangeVisible: false })}
         footer={[
@@ -380,6 +381,7 @@ class Arrange extends PureComponent{
             </div>
             <div style={{ height: 412}}>
               <Search 
+                onChange={value =>this.setState({ leftSearchValue: value })}
                 style={{ margin: '10px 0' }}
                 placeholder='请输入搜索内容'
                 onSearch={this.leftSearch}
@@ -426,6 +428,7 @@ class Arrange extends PureComponent{
             </div>
             <div style={{ height: 412}}>
               <Search 
+                onChange={value =>this.setState({ rightSearchValue: value })}
                 style={{ margin: '10px 0' }}
                 onSearch={this.rightSearch}
                 placeholder='请输入搜索内容'

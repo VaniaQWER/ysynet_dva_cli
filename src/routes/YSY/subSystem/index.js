@@ -1,9 +1,10 @@
 import React, { PureComponent } from 'react';
-import { Menu, Button, Row, Col, Input, Modal,Form, Checkbox, Icon, message,List,Spin } from 'antd';
+import { Menu, Button, Row, Col, Input, Modal,Form, Checkbox, Icon, message,List,Spin, Radio } from 'antd';
 import RemoteTable from '../../../components/TableGrid';
 import EditableCell from '../../../components/EditableCell';
 import ysy from '../../../api/ysy'
 import { connect } from 'dva';
+const RadioGroup = Radio.Group;
 const { Search } = Input;
 const FormItem = Form.Item;
 
@@ -43,6 +44,19 @@ class NewAddForm extends PureComponent{
               )
             }
           </FormItem>
+          <FormItem {...formItemLayout} label={`是否末级标识`}>
+            {
+              getFieldDecorator(`lastFlag`,{
+                rules: [{ required: true,message: '请选择末级标识选项' }],
+                initialValue: isEdit ? this.props.data.lastFlag: ''
+              })(
+                <RadioGroup disabled={isEdit ? true: false}>
+                  <Radio value={'01'}>是</Radio>
+                  <Radio value={'00'}>否</Radio>
+                </RadioGroup>
+              )
+            }
+          </FormItem>
         </Form>
     )
   }
@@ -58,13 +72,7 @@ class MenuAddForm extends PureComponent{
       flag: false
     }
   }
-  componentWillReceiveProps = nextProps =>{
-    if(nextProps.menuInfo.menuId!== this.props.menuInfo.menuId){
-      let { menuInfo } = nextProps;
-      this.props.form.setFieldsValue({ menuId: menuInfo.menuId, menuName: menuInfo.menuName,routerName: menuInfo.routerName });
-    }
-  }
-  /* static getDerivedStateFromProps(nextProps, prevState){
+  static getDerivedStateFromProps(nextProps, prevState){
     if(nextProps.menuInfo.menuId!== prevState.menuInfo.menuId){
       return {
         flag: true,
@@ -76,9 +84,11 @@ class MenuAddForm extends PureComponent{
   componentDidUpdate(prevProps, prevState){
     if(this.state.flag){
       let { menuInfo } = this.state;
-      this.props.form.setFieldsValue({ menuId: menuInfo.menuId, menuName: menuInfo.menuName,url: menuInfo.url });
+      console.log(menuInfo,'menuInfo');
+      this.setState({ flag: false })
+      this.props.form.setFieldsValue({ menuId: menuInfo.menuId, menuName: menuInfo.menuName,routerName: menuInfo.routerName });
     }
-  } */
+  }
   render(){
     const { getFieldDecorator } = this.props.form;
     return (
@@ -106,7 +116,7 @@ class MenuAddForm extends PureComponent{
         </FormItem>
         <FormItem {...formItemLayout} label={`路径`}>
           {
-            getFieldDecorator(`url`,{
+            getFieldDecorator(`routerName`,{
               initialValue:'',
               rules: [{ required: true,message:'请输入路径' }]
             })(
@@ -189,12 +199,12 @@ class SubSystem extends PureComponent{
           }
           values.subSystemFlag = values.subSystemFlag.length > 1 ? '02':values.subSystemFlag[0];
           console.log(values,'values');
-          this.setState({ subSystemLoading: true });
+          /* this.setState({ subSystemLoading: true });
           this.props.dispatch({
             type:'subSystem/addSubSystem',
             payload: values,
             callback: () => this.setState({ subSystemLoading: false, newAddVisible: false  })
-          });
+          }); */
         }
       }
     })
@@ -224,9 +234,13 @@ class SubSystem extends PureComponent{
     })
   }
   IconEdit = (item,e) =>{
+    console.log(item,'item')
     e.stopPropagation();
+    if(this.form_system){
+      this.form_system.resetFields();
+    }
     this.setState({ newAddVisible: true,title: '编辑',isEdit: true, 
-    editData: { subSystemId: item.subSystemId, subSystemName: item.subSystemName,subSystemFlag: item.subSystemFlag } });
+    editData: { subSystemId: item.subSystemId, subSystemName: item.subSystemName,subSystemFlag: item.subSystemFlag,lastFlag: item.lastFlag } });
   }
   handleClick = (e) => {
     console.log(e,'e')
@@ -365,9 +379,9 @@ class SubSystem extends PureComponent{
           ref={(form) => this.form_menu = form}  
         />
       </Modal>
-      <Row>
-        <Col span={5} style={{ borderRight:' dashed 1px rgb(217,217,217)' }}>
-          <Row className='ant-row-bottom'>
+      <div style={{ display: 'flex' }}>
+        <div style={{ borderRight:' dashed 1px rgb(217,217,217)',width: 208 }}>
+          <Row className='ant-row-bottom' style={{ width: 208 }}>
             <Col>
               <Button type='primary' style={{ marginRight: 8 }} 
                 disabled={addsystemDisable}
@@ -383,10 +397,10 @@ class SubSystem extends PureComponent{
               <Button type='default' onClick={this.delete} disabled={deleteBtndisable}>删除</Button>
             </Col>
           </Row>
-          <Row className='ant-row-bottom'>
+          <Row className='ant-row-bottom' style={{ paddingRight: 12 }}>
             <Col>
                 <Search 
-                  style={{ width: 256 }}
+                  style={{ width: '100%' }}
                   placeholder='请输入系统名称'
                   onSearch={value => this.search(value)}
                 />
@@ -401,13 +415,13 @@ class SubSystem extends PureComponent{
                   console.log(page);
                 },
                 size: 'small',
-                pageSize: 1,
+                pageSize: 4,
               }}
               renderItem={item=>(
                 <Menu
                   onClick={this.handleClick}
                   selectedKeys={selectedKeys}
-                  style={{ width: 256 }}
+                  style={{ width: '100%' }}
                   mode="inline"
                 >
                   <Menu.Item subsystemid={item.subSystemId} key={item.subSystemId} subsystemflag={item.subSystemFlag}  relflag={item.relFlag}>
@@ -432,8 +446,8 @@ class SubSystem extends PureComponent{
             >
             </List>
           </Spin>
-        </Col>
-        <Col span={19} style={{ paddingLeft: 16 }}>
+        </div>
+        <div style={{ width: '100%',paddingLeft: 16 }}>
           <Row className='ant-row-bottom'>
             <Col span={12}>
               <Search
@@ -462,22 +476,18 @@ class SubSystem extends PureComponent{
               </Col>
             }
           </Row>
-          <Row>
-            <Col>
-              <RemoteTable
-                ref='table'
-                columns={columns}
-                rowKey={'menuId'}
-                size='small'
-                query={query}
-                url={url}
-                scroll={{ x: "100%" }}
-                showHeader={true}
-              />
-            </Col>
-          </Row>
-        </Col>
-      </Row>
+          <RemoteTable
+            ref='table'
+            columns={columns}
+            rowKey={'menuId'}
+            size='small'
+            query={query}
+            url={url}
+            scroll={{ x: "100%" }}
+            showHeader={true}
+          />
+        </div>
+      </div>
     </div>
     )
   }

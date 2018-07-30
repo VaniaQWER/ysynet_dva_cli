@@ -58,7 +58,6 @@ export default {
     },
     // 根据menuId 菜单编号 查找菜单信息
     *findMenuById({ payload,callback },{ put, call }){
-      console.log(payload,'paysf')
       const data = yield call(subSystemService.findMenuById, payload);
       if(data.status){
         if(data.result.menuId){
@@ -67,7 +66,8 @@ export default {
           message.warning('暂无信息');
         }
       }else{
-        message.error(data.msg|| '查找菜单信息失败')
+        message.error(data.msg|| '查找菜单信息失败');
+        if(callback) callback(data.result)
       }
     },
     // 添菜单

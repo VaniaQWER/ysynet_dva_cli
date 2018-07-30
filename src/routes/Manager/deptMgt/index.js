@@ -149,6 +149,8 @@ class DeptMgt extends PureComponent{
     loading: false,
     addressVisible: false,
     record: {},
+    count: 0,
+    addressData: [],
     ModalColumns: [{
         title: '联系人',
         dataIndex: 'linkman',
@@ -201,21 +203,22 @@ class DeptMgt extends PureComponent{
   }
   address = (record) =>{
     this.setState({ addressVisible: true, record })
-    this.fetchAddressData();
+    this.fetchAddressData(record.deptGuid);
   }
   // 获取科室地址列表
-  fetchAddressData = () =>{
+  fetchAddressData = (value) =>{
     this.setState({ tableLoading: true });
     this.props.dispatch({
       type: 'deptMgt/searchDeptAddress',
-      payload: { deptGuid: this.state.record.deptGuid },
-      callback: ()=>this.setState({ tableLoading: false })
+      payload: { deptGuid: value || this.state.record.deptGuid },
+      callback: (data)=>this.setState({ addressData: data, tableLoading: false, count: data.length })
     })
   }
   submit = (value) =>{
     this.setState({ loading: true });
+    let type = this.state.isEdit ? 'deptMgt/updateOrgDept': 'deptMgt/insertOrgDept';
     this.props.dispatch({
-      type: 'deptMgt/insertOrmodify',
+      type: type,
       payload: value,
       callback: () =>{
         this.setState({ visible: false,loading: false });
@@ -230,20 +233,16 @@ class DeptMgt extends PureComponent{
     if(value.length > len){
       return message.warning(`${text}的长度不能超过${len}`);
     }
-    const newData = [...this.props.deptMgt.addressData];
+    const newData = [...this.state.addressData];
     const target = newData.filter(item => key === item.key)[0];
     if (target) {
       target[column] = value;
-      // this.setState({ dataSource: newData });
-      this.props.dispatch({
-        type: 'deptMgt/updateAddress',
-        payload: target
-      })
+      this.setState({ dataSource: newData });
     }
   }
   onCheckChanage = (e) => {
     var index = e.target.dataIndex;
-    const dataSource = [ ...this.props.deptMgt.addressData ];
+    const dataSource = [ ...this.state.addressData ];
     dataSource.map((item,idx) => {
       if(index === idx){
         e.target.checked = true;
@@ -267,7 +266,7 @@ class DeptMgt extends PureComponent{
   }
   // 修改科室地址信息
   update(key) {
-    const newData = [...this.props.deptMgt.addressData];
+    const newData = [...this.state.addressData];
     const target = newData.filter(item => key === item.key)[0];
     console.log(target,'target')
     if (target) {
@@ -303,34 +302,30 @@ class DeptMgt extends PureComponent{
           message.warning('您没有设置默认地址,请设置默认地址')
         }
       }else{
-        this.props.dispatch({
-          type: 'deptMgt/editable',
-          payload: target
-        })
+        let index = newData.findIndex(item => item.addrGuid === target.addrGuid);
+        newData[index] = target;
+        this.setState({ addressData: newData });
       }
     }
   }
   // 删除科室地址
   onDelete = (record,index) =>{
-			const newData = [ ...this.props.deptMgt.addressData];
-			if(record.addrGuid){
-        this.props.dispatch({
-          type: 'deptMgt/deleteAddress',
-          payload: { addrGuid: record.addrGuid },
-          callback: ()=> this.fetchAddressData()
-        })
-			}else{
-        // 删除页面上地址，无交互
-				newData.splice(index,1);
-				this.props.dispatch({
-          type: 'deptMgt/delete',
-          payload: newData
-        })
-			}
+    const newData = [ ...this.state.addressData];
+    if(record.addrGuid){
+      this.props.dispatch({
+        type: 'deptMgt/deleteAddress',
+        payload: { addrGuid: record.addrGuid },
+        callback: ()=> this.fetchAddressData()
+      })
+    }else{
+      // 删除页面上地址，无交互
+      newData.splice(index,1);
+      this.setState({ addressData: newData, count: this.state.count -1  });
+    }
   }
   // 添加科室地址
   handleAdd = () =>{
-    const { count } = this.props.deptMgt;
+    const { count } = this.state;
     if(count >= 10){
       return message.warning('科室地址只能添加10条记录');
     }
@@ -341,14 +336,10 @@ class DeptMgt extends PureComponent{
       tfAddress: '',
       isDefault: '00'
     };
-    this.props.dispatch({
-      type: 'deptMgt/addAddress',
-      payload: newData
-    });
+    this.setState({ addressData: [ ...this.state.addressData, newData],count: this.state.count + 1 });
   }
   render(){
-    const { visible, title, record, isEdit, loading, addressVisible, tableLoading, ModalColumns } = this.state;
-    const { addressData } = this.props.deptMgt;
+    const { visible, title, record, isEdit, loading, addressVisible, tableLoading, ModalColumns, addressData } = this.state;
     const columns = [{
         title: '科室名称',
         dataIndex: 'deptName'
