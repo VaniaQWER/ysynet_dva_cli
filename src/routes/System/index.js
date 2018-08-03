@@ -23,6 +23,15 @@ class SubSystem extends PureComponent {
       callback: (data) => {
         let path = data[0].subMenus[0].path;
         this.props.history.push({ pathname: path });
+        let userInfo = JSON.parse(localStorage.getItem('subSystemUser'));
+        userInfo.deptGuid = item.deptGuid;
+        userInfo.subSystemId = item.subSystemId;
+        userInfo.subSystemName = item.name;
+        localStorage.setItem('subSystemUser',JSON.stringify(userInfo));
+        this.props.dispatch({
+          type: 'users/setUserInfo',
+          payload: userInfo
+        });
         // 保存选中的子系统 subSystemId deptGuid 
         this.props.dispatch({
           type: 'users/subsystemInfo',
@@ -36,7 +45,9 @@ class SubSystem extends PureComponent {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          <a style={{ color: '#999'}}>退 出</a>
+          <a style={{ color: '#999'}} onClick={()=>{
+            window.location.hash ='/login'
+            }}>退 出</a>
         </div>
         <div className={styles.content}>
           <div className={styles.contentHeader}>

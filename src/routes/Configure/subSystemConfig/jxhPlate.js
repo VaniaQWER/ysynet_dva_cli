@@ -38,6 +38,8 @@ class JXHPlate extends PureComponent{
     searchName: '',
     record: {},
     options: [],
+    subSystemOptions: [],
+    subSystemId: '',
     visible: false,
     loading: false
   }
@@ -47,14 +49,15 @@ class JXHPlate extends PureComponent{
   genSubSystemList = () =>{
     this.props.dispatch({
       type: 'subSystemConfig/subSystemList',
-      payload: {}
+      payload: {},
+      callback: (data) => {
+        let subSystemId = data[0].value
+        this.setState({ subSystemOptions: data, subSystemId })
+      }
     })
   }
   onSelect = (value) =>{
-    this.props.dispatch({
-      type: 'subSystemConfig/subSystemId',
-      payload: value
-    })
+    this.setState({ subSystemId: value });
   }
   edit = (record,stateRecord,index)=>{
     if(stateRecord.editable){
@@ -122,8 +125,8 @@ class JXHPlate extends PureComponent{
   newAdd = () =>{
     this.props.form.validateFields( (err,values) =>{
       if(!err){
+        values.subSystemId = this.state.subSystemId;
         console.log(values,'values');
-        // values.subSystemId = subSystemId;
         this.setState({ loading: true })
         this.props.dispatch({
           type: 'subSystemConfig/saveConfig',
@@ -137,7 +140,7 @@ class JXHPlate extends PureComponent{
     })
   }
   render(){
-    const { subSystemOptions, subSystemId } = this.props.subSystemConfig;
+    const { subSystemOptions ,subSystemId } = this.state;
     const { visible, loading } = this.state;
     const { getFieldDecorator } = this.props.form;
     const columns = [{
@@ -160,6 +163,7 @@ class JXHPlate extends PureComponent{
     },{
       title: '代码',
       dataIndex: 'configCode',
+      width: 200
     },{
       title: '默认值',
       dataIndex: 'configValueName',

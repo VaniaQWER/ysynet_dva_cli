@@ -129,7 +129,6 @@ class SubSystemManager extends PureComponent{
         <Modal 
           title={title}
           visible={visible}
-          style={{ top: 20 }}
           width={460}
           onCancel={()=>this.setState({ visible: false })}
           footer={null}

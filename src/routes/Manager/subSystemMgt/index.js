@@ -9,7 +9,11 @@ const { Search } = Input;
 const ModalColumns = [{
   title: '管理员',
   dataIndex: 'userName'
-}]
+}];
+let rules = {
+  rule: /^\d{1,2}$/,
+  errorMsg: '请输入不大于2位数的正整数'
+}
 class SubSystemMgt extends PureComponent{
   state = {
     query: {},
@@ -36,6 +40,7 @@ class SubSystemMgt extends PureComponent{
     leftCacheData: [],
     rightCacheData: [],
     systemMenuList: [],
+    systemMenuRecord: {}// 系统菜单模态框 record
   }
   manager = (record) =>{
     this.setState({ record });
@@ -77,13 +82,6 @@ class SubSystemMgt extends PureComponent{
     }else{
       this.setState({ rightDataSource: rightCacheData, rightLoading: false })
     }
-  }
-  search = (dir,value) =>{
-    this.props.dispatch({
-      type: 'subSystemMgt/modalSearch',
-      payload: { dir, searchName: value },
-      callback: ()=> this.setState({ leftLoading: false,rightLoading: false })
-    })
   }
   addUser = () =>{
     this.setState({ addLoading: true });
@@ -205,9 +203,75 @@ class SubSystemMgt extends PureComponent{
       callback: () => this.refs.table.fetch()
     })
   }
+  modalonCellChange = (value,record,columns) =>{
+    record[columns] = value;
+    let newSystemMenuList = [...this.state.systemMenuList];
+    let targetIndex ;
+    newSystemMenuList.map((item,index)=>{
+      if(item.id === record.id){
+        targetIndex = `${index}`;
+        return null;
+      }else{
+        if(item.children){
+          item.children.map((child,idx) =>{
+            if(child.id  === record.id){
+              targetIndex = `${index}/${idx}`;
+            }
+            return null
+          })
+        }
+      }
+      return null
+    });
+    if(targetIndex.includes('/')){
+      let arr = targetIndex.split('/');
+      newSystemMenuList[Number(arr[0])].children[Number(arr[1])] = record;
+    }else{
+      newSystemMenuList[Number(targetIndex)] = record;
+    }
+    newSystemMenuList.map(item=>{
+      let parentFsort = item.fsort;
+      item.children.map(child=>{
+        child.parentFsort = parentFsort;
+        return null;
+      })
+      return null;
+    });
+    this.setState({ systemMenuList: newSystemMenuList })
+  };
+  // 编辑菜单排序
+  modifySystemMenu = () =>{
+    let { selectedRows, record } = this.state;
+    let newSelectRow = selectedRows.filter(item => item.level === 1);
+    if(newSelectRow.length === 0){
+      return message.warning('请至少勾选一项子集菜单')
+    }
+    let postData = {}, subMenus = [];
+    postData.deployOrgSubSystemGuid = record.deployOrgSubSystemGuid;
+    newSelectRow.map(item=>{
+      return subMenus.push({
+        menuId: item.id,
+        menuAlias: item.menuAlias,
+        fsort: `${item.parentFsort}${item.fsort}`,
+        tfRemark: item.tfRemark
+      })
+    });
+    postData.subMenus = subMenus;
+    this.setState({ dirtyClick: true });
+    console.log(postData,'postData')
+    this.props.dispatch({
+      type: 'subSystemMgt/updateSystemMenu',
+      payload: postData,
+      callback: () =>{
+        this.setState({ dirtyClick: false, menuVisible: false });
+      }
+    })
+
+  }
   render(){
+    
     const { visible, menuVisible, leftLoading, rightLoading, addLoading, removeLoading, 
-      leftDataSource, rightDataSource, systemMenuList, selected } = this.state;
+      leftDataSource, rightDataSource, systemMenuList, selected, dirtyClick } = this.state;
     const columns = [{
       title: '系统名称',
       dataIndex: 'subSystemName'
@@ -251,8 +315,11 @@ class SubSystemMgt extends PureComponent{
       width: 180,
       render: (text,record,index)=>{
         return <span>
-          <a onClick={this.manager.bind(null,record)}>管理员</a>
-          <a style={{ marginLeft: 8 }} onClick={this.systemMenu.bind(null,record)}>系统菜单</a>
+          {
+            record.subSystemId !== '02' &&
+            <a onClick={this.manager.bind(null,record)}>管理员</a>
+          }
+          <a style={{ marginLeft: record.subSystemId === '02' ? 50: 8 }} onClick={this.systemMenu.bind(null,record)}>系统菜单</a>
         </span>
       }
     }];
@@ -265,12 +332,43 @@ class SubSystemMgt extends PureComponent{
       title: '菜单别名',
       dataIndex: 'menuAlias',
       key: 'menuAlias',
-      width: 180
+      width: 200,
+      render: (text,record,index)=>{
+        if(!record.children){
+          return (
+            <EditableCell 
+              value={ text }
+              width={'70%'}
+              record={record}
+              columns={'menuAlias'}
+              index={index}
+              cb={(record)=>this.setState({ systemMenuRecord: record })}
+              onEditChange={(index,record,editable,colums)=>this.modalonCellChange(index, record, editable,'menuAlias')}
+            />
+          )
+        }
+        return text;
+      }
     },{
       title: '排序',
       dataIndex: 'fsort',
       key: 'fsort',
-      width: 150
+      width: 200,
+      render: (text,record,index)=>{
+        return (
+          <EditableCell 
+            value={ text }
+            width={'70%'}
+            record={record}
+            validate={true}
+            rules={rules}
+            columns={'fsort'}
+            index={index}
+            cb={(record)=>this.setState({ systemMenuRecord: record })}
+            onEditChange={(index,record,editable,colums)=>this.modalonCellChange(index, record, editable,'fsort')}
+          />
+        )
+      }
     },{
       title: '路径',
       dataIndex: 'routerName',
@@ -279,7 +377,23 @@ class SubSystemMgt extends PureComponent{
       title: '备注',
       dataIndex: 'tfRemark',
       key: 'tfRemark',
-      width: 200
+      width: 200,
+      render: (text,record,index)=>{
+        if(!record.children){
+          return (
+            <EditableCell 
+              value={ text }
+              width={'70%'}
+              record={record}
+              columns={'tfRemark'}
+              index={index}
+              cb={(record)=>this.setState({ systemMenuRecord: record })}
+              onEditChange={(index,record,editable,colums)=>this.modalonCellChange(index, record, editable,'tfRemark')}
+          />
+          )
+        }
+        return text
+      }
     }]
     return (
       <div>
@@ -287,7 +401,6 @@ class SubSystemMgt extends PureComponent{
           className='ysynet-ant-modal'
           title='管理员'
           visible={visible}
-          style={{ top: 20 }}
           width={1100}
           onCancel={()=>this.setState({ visible: false })}
           footer={null}
@@ -397,10 +510,9 @@ class SubSystemMgt extends PureComponent{
           title='系统菜单'
           visible={menuVisible}
           width={1100}
-          style={{ top: 20 }}
           onCancel={()=>this.setState({ menuVisible: false })}
           footer={[
-            <Button key="submit" type='primary' onClick={this.modifySystem}>
+            <Button key="submit" type='primary' loading={dirtyClick} onClick={this.modifySystemMenu}>
               确认
             </Button>,
             <Button key="back"  type='default' onClick={()=>this.setState({ menuVisible: false })}>取消</Button>

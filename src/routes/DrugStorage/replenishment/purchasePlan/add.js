@@ -110,7 +110,6 @@ class NewAdd extends PureComponent{
           title={'添加产品'}
           visible={visible}
           width={1100}
-          style={{ top: 20 }}
           onCancel={()=>this.setState({ visible: false })}
           footer={[
             <Button key="submit" type="primary" loading={this.state.loading} onClick={this.handleOk}>确认</Button>,

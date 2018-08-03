@@ -85,36 +85,36 @@ export const getNavData = app => [
         name: '管理员--科室管理',
         icon: 'user',
         path: '/system/deptMgt',
-        component: dynamicWrapper(app, ['manager/deptMgt'], () => import('../routes/Manager/deptMgt'))
+        component: dynamicWrapper(app, ['manager/deptMgt','manager/subSystemMgt'], () => import('../routes/Manager/deptMgt'))
       },
-      {
+      /* {
         name: '精细化--临床科室子系统--配置管理',
         icon: 'user',
         path: '/lcksSubSystem/configMgt',
         component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/ClinicalDeptSystem/configMgt'))
-      },
+      }, */
       {
         name: '精细化--临床科室子系统--用户管理',
         icon: 'user',
-        path: '/lcksSubSystem/userMgt',
+        path: '/system/customerUser',
         component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/ClinicalDeptSystem/userMgt'))
       },
       {
         name: '精细化--临床科室子系统--科室权限',
         icon: 'user',
-        path: '/lcksSubSystem/deptPower',
+        path: '/system/deptPower',
         component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/ClinicalDeptSystem/deptPower'))
       },
-      {
+      /* {
         name: '精细化--非临床科室子系统--配置管理',
         icon: 'user',
         path: '/flcksSubSystem/configMgt',
         component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/NonClinicalDeptSystem/configMgt'))
-      },
+      }, */
       {
         name: '精细化--非临床科室子系统--用户管理',
         icon: 'user',
-        path: '/flcksSubSystem/userMgt',
+        path: '/system/customerUser',
         component: dynamicWrapper(app, ['clinicalSubSystem/index'], () => import('../routes/NonClinicalDeptSystem/userMgt'))
       },
     ]

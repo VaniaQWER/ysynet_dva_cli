@@ -12,7 +12,9 @@
 }
 .content{
   width: 100%;
-  background-color: #f8fafb;
+  /* background-color: #f8fafb; */
+  background: url('../../assets/img/selectSystem-bg.jpg') center no-repeat;
+  background-size: cover;
   min-height: calc(100vh - 56px);
 }
 .contentHeader{

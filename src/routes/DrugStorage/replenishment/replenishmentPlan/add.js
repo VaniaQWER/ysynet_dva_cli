@@ -2,7 +2,7 @@
  * @Author: wwb 
  * @Date: 2018-07-24 18:49:01 
  * @Last Modified by: wwb
- * @Last Modified time: 2018-07-24 23:23:27
+ * @Last Modified time: 2018-08-02 11:26:54
  */
 /**
  * @file 药库 - 补货管理--补货计划--新建计划
@@ -110,7 +110,6 @@ class NewAdd extends PureComponent{
           title={'添加产品'}
           visible={visible}
           width={1100}
-          style={{ top: 20 }}
           onCancel={()=>this.setState({ visible: false })}
           footer={[
             <Button key="submit" type="primary" loading={this.state.loading} onClick={this.handleOk}>确认</Button>,

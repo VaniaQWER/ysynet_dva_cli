@@ -1,10 +1,8 @@
 import React, { PureComponent } from 'react';
 import { Form, Button, Checkbox, Input, Icon, message } from 'antd';
 import { connect } from 'dva';
-import querystring from 'querystring';
 import sha1 from 'sha1';
 import md5 from 'md5';
-import ysy from '../../api/ysy';
 import styles from './style.css';
 const FormItem = Form.Item;
 
@@ -36,25 +34,21 @@ class Login extends PureComponent{
           pwd: sha1(pwd),
           token: 'vania'
         }
-        fetch(ysy.USERLOGIN,{
-          credentials: 'include',
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: querystring.stringify(userInfo)
-        })
-        .then((res)=>res.json())
-        .then((data)=>{
-          this.setState({ loading: false });
+        this.props.dispatch({
+          type: 'users/userLogin',
+          payload: userInfo,
+          callback: (data) =>{
+            this.setState({ loading: false });
           if(!data.result.loginResult){
             message.error(data.result.loginResult)
           }else{
             this.props.dispatch({
               type: 'users/setUserInfo',
               payload: data.result.userInfo
-            })
-
+            });
+            let userInfo = data.result.userInfo;
+            userInfo.subSystemFlag = data.result.subSystemFlag;
+            localStorage.setItem('subSystemUser', JSON.stringify(userInfo));
             if(data.result.subSystemFlag === undefined){
               // undefined  没有subSystemFlag  标识 请求3.0 接口
               this.props.dispatch({
@@ -91,7 +85,7 @@ class Login extends PureComponent{
                 });
               }
             }
-           
+          }
           }
         })
       }

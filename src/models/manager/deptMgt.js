@@ -1,4 +1,5 @@
 import * as subMgtService from '../../services/manager/subSystemMgt';
+import * as userSystemService from '../../services/clinicalSystem';
 import { message } from 'antd';
 
 export default {
@@ -66,6 +67,25 @@ export default {
         message.error(data.msg||'删除失败')
       }
     },
+    // 获取科室权限下 科室对应的菜单
+   *genDeptMenus({ payload,callback },{ call }){
+    const data = yield call(userSystemService.getDeptMenus,payload);
+    if(data.status){
+      if(callback) callback(data.result.rows);
+    }else{
+      message.warning('暂无科室，请添加');
+    }
+   },
+   *saveDeptMenus({ payload, callback },{ call }){
+     const data = yield call(subMgtService.saveDeptMenus, payload);
+     if(data.status){
+       message.success('操作成功');
+     }else{
+       message.error(data.msg||'科室管理 分配菜单权限失败')
+     }
+     
+     if(callback) callback();
+   }
   },
   subscriptions: {
     

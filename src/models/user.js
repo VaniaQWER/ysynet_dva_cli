@@ -36,7 +36,23 @@ export default {
     }
   },
   effects:{
-    *getUserM({ payload,callback },{ call,put }){
+    *userLogin({ payload, callback },{ call }){
+      const data = yield call(usersService.login, payload);
+      if(data.status){
+        if(callback) callback(data);
+      }else{
+        message.error(data.msg||'登陆获取用户信息失败');
+      }
+    },
+    *getUserInfo({ payload,callback },{ call }){
+      const data = yield call(usersService.getUserInfo,payload);
+      if(data.status){
+        if(callback) callback(data.result)
+      }else{
+        message.error(data.msg||'获取用户信息失败')
+      }
+    },
+    *getUserM({ payload, callback },{ call,put }){
       const data = yield call(usersService.getUserM, payload);
       if(data.status){
         yield put({ type: 'userMenu',payload: data.result });
@@ -64,19 +80,21 @@ export default {
     *getSubSystem({ payload, callback },{ put,call }){
       const data = yield call(usersService.getUserSubSystem, payload );
       if(data.status){
-        if (callback) callback(data.result);
         yield put({ type: 'subSystem',payload: data.result })
+      }else{
+        message.error(data.msg||'获取子子系统失败')
       }
+      if (callback) callback(data.result);
     },
     // 获取用户 模块和 权限 
     *findMenusByUser({ payload, callback },{ call, put }){
       const data = yield call(usersService.findMenusByUser, payload);
       if(data.status){
         yield put({ type: 'userMenu',payload: data.result })
-        if (callback) callback(data.result);
       }else{
         message.error(data.msg||'获取用户模块和权限失败')
       }
+      if (callback) callback(data.result);
     },
     *subsystemInfo({ payload },{ put }){
       yield put({ type: 'setSubSystemInfo',payload })

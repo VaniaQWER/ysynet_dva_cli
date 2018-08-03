@@ -329,7 +329,6 @@ class Arrange extends PureComponent{
       </Row>
       <Modal
         title={title}
-        style={{ top: 20 }}
         width={800}
         className='ant-modal-center-footer'
         visible={addVisible}
@@ -352,7 +351,6 @@ class Arrange extends PureComponent{
         className='ysynet-ant-modal'
         title='部署机构'
         width={1100}
-        style={{ top: 20 }}
         visible={arrangeVisible}
         onCancel={()=>this.setState({ arrangeVisible: false })}
         footer={[

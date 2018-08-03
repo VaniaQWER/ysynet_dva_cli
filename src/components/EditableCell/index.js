@@ -18,21 +18,24 @@ class EditableCell extends PureComponent {
     return null;
   }
   handleChange = (e) => {
+    if(this.props.validate){
+      let { rules } = this.props;
+      let { rule, errorMsg } = rules;
+      if(!rule.test(e.target.value)){
+        return message.warning(errorMsg)
+      }
+    }
     const value = e.target.value;
     this.setState({ value });
   }
   
-  /* componentWillReceiveProps = nextProps =>{
-      if(nextProps.value !== this.state.value && !this.state.editable){
-          this.setState({ value: nextProps.value,record: nextProps.record});
-      }
-  } */
   check = () => {
     if(this.state.value.length>this.state.max){
         return  message.warning('字符长度不能超过'+this.state.max);
     };
     this.setState({ editable: false });
     const { value, record, columns } = this.state;
+    console.log(columns,'EditCell columns')
     this.props.onEditChange(value, record, columns);
   }
   edit = () => {
@@ -46,7 +49,7 @@ class EditableCell extends PureComponent {
           editable ?
             <div className="editable-cell-input-wrapper">
               <Input
-                style={{ width: '85%' }}
+                style={{ width: this.props.width || '85%' }}
                 value={value}
                 max={max}
                 onChange={this.handleChange}

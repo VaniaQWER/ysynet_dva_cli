@@ -16,7 +16,7 @@ const formItemLayout = {
 class NewAddForm extends PureComponent{
   render(){
     const { getFieldDecorator } = this.props.form;
-    const { isEdit } = this.props;
+    const { isEdit, subSystemId } = this.props;
     return (
       <Form>
           <FormItem {...formItemLayout} label={`子系统名称`}>
@@ -29,34 +29,40 @@ class NewAddForm extends PureComponent{
               )
             }
           </FormItem>
-          <FormItem {...formItemLayout} label={`关联标识`}>
-            {
-              getFieldDecorator(`subSystemFlag`,{
-                initialValue: isEdit ? this.props.data.subSystemFlag === '02'? ['00','01']: [this.props.data.subSystemFlag]: [],
-                rules: [{ required: true,message: '请选择关联标识' }]
-              })(
-                <Checkbox.Group>
-                  <Row>
-                    <Col span={12}><Checkbox value='00'>关联部署</Checkbox></Col>
-                    <Col span={12}><Checkbox value='01'>关联机构</Checkbox></Col>
-                  </Row>
-                </Checkbox.Group>
-              )
-            }
-          </FormItem>
-          <FormItem {...formItemLayout} label={`是否末级标识`}>
-            {
-              getFieldDecorator(`lastFlag`,{
-                rules: [{ required: true,message: '请选择末级标识选项' }],
-                initialValue: isEdit ? this.props.data.lastFlag: ''
-              })(
-                <RadioGroup disabled={isEdit ? true: false}>
-                  <Radio value={'01'}>是</Radio>
-                  <Radio value={'00'}>否</Radio>
-                </RadioGroup>
-              )
-            }
-          </FormItem>
+          {
+            !subSystemId &&
+            <FormItem {...formItemLayout} label={`关联标识`}>
+              {
+                getFieldDecorator(`subSystemFlag`,{
+                  initialValue: isEdit ? this.props.data.subSystemFlag === '02'? ['00','01']: [this.props.data.subSystemFlag]: [],
+                  rules: [{ required: true,message: '请选择关联标识' }]
+                })(
+                  <Checkbox.Group>
+                    <Row>
+                      <Col span={12}><Checkbox value='00'>关联部署</Checkbox></Col>
+                      <Col span={12}><Checkbox value='01'>关联机构</Checkbox></Col>
+                    </Row>
+                  </Checkbox.Group>
+                )
+              }
+            </FormItem>
+          }
+          {
+            !subSystemId &&
+            <FormItem {...formItemLayout} label={`是否末级标识`}>
+              {
+                getFieldDecorator(`lastFlag`,{
+                  rules: [{ required: true,message: '请选择末级标识选项' }],
+                  initialValue: isEdit ? this.props.data.lastFlag: ''
+                })(
+                  <RadioGroup disabled={isEdit ? true: false}>
+                    <Radio value={'01'}>是</Radio>
+                    <Radio value={'00'}>否</Radio>
+                  </RadioGroup>
+                )
+              }
+            </FormItem>
+          }
         </Form>
     )
   }
@@ -190,21 +196,26 @@ class SubSystem extends PureComponent{
           this.props.dispatch({
             type: 'subSystem/modifySystem',
             payload: values,
-            callback: () => this.setState({ subSystemLoading: false, newAddVisible: false  })
+            callback: () => {
+              this.setState({ subSystemLoading: false, newAddVisible: false, loading: true  });
+              this.genSystemTree();
+            }
           })
           this.setState({ isEdit: false })
         }else{
           if(this.state.system.parentId){
             values.parentId = this.state.system.parentId;
           }
-          values.subSystemFlag = values.subSystemFlag.length > 1 ? '02':values.subSystemFlag[0];
           console.log(values,'values');
-          /* this.setState({ subSystemLoading: true });
+          this.setState({ subSystemLoading: true });
           this.props.dispatch({
             type:'subSystem/addSubSystem',
             payload: values,
-            callback: () => this.setState({ subSystemLoading: false, newAddVisible: false  })
-          }); */
+            callback: () => {
+              this.setState({ subSystemLoading: false, newAddVisible: false ,loading: true });
+              this.genSystemTree();
+            }
+          });
         }
       }
     })
@@ -281,6 +292,8 @@ class SubSystem extends PureComponent{
             type: 'subSystem/deletSubsystem',
             payload: { subSystemId },
             callback: ()=>{
+              that.setState({ loading: true });
+              that.genSystemTree();
               that.setState({ url: null,subSystemId: '',query: {}, system: {},selectedKeys: [],selectedSystemId: '',confirmLoading: false })
             }
           })
@@ -359,6 +372,7 @@ class SubSystem extends PureComponent{
       >
         <WrapAddForm 
           ref={(form) => this.form_system = form}
+          subSystemId={this.state.subSystemId}
           data={editData}
           isEdit={isEdit}/>
       </Modal>

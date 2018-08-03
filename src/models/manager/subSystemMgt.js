@@ -4,36 +4,10 @@ import { message } from 'antd';
 export default {
   namespace: 'subSystemMgt',
   state: {
-    leftSearchData: [],
-    rightCacheData: [],
+    
   },
   reducers: {
-    searchData(state,action){
-      if(action.payload.dir === 'left'){
-        return {
-          ...state,
-          leftDataSource: action.payload.dataSource
-        }
-      }else{
-        return {
-          ...state,
-          rightDataSource: action.payload.dataSource
-        }
-      }
-    },
-    novalueSearch(state,action){
-      if(action.payload.dir === 'left'){
-        return {
-          ...state,
-          leftDataSource: state.leftCacheData
-        }
-      }else{
-        return {
-          ...state,
-          rightDataSource: state.rightCacheData
-        }
-      }
-    }
+    
   },
   effects: {
     // 修改 系统别名  备注 
@@ -49,40 +23,23 @@ export default {
     // 获取管理员关联列表 
     *getSubSystemsManager({ payload,callback },{ put, call }){
       const data = yield call(subMgtService.getSubSystemsManager, payload);
-      if(data.status){
-        // yield put({ type: 'managerData', payload: data.result });
-        if (callback) callback(data.result);
-      }else{
+      if(!data.status){
         message.error(data.msg||'获取管理员关联列表失败')
       }
-    },
-    *modalSearch({ payload,callback },{ select, put }){
-      const stateData = yield select(state=> state.subSystemMgt);
-      let { leftDataSource, rightDataSource } = stateData;
-      let newleftData = [], newRightData = []
-      if(payload.dir === 'left'){
-        if(payload.searchName){
-          newleftData =  leftDataSource.filter(item=> item.userName.includes(payload.searchName));
-          yield put({ type: 'searchData', payload: { dataSource: newleftData, dir: 'left'} })
-        }else{
-          yield put({ type: 'novalueSearch', payload: { dir: 'left' } })
-        }
-      }else{
-        if(payload.searchName){
-          newRightData = rightDataSource.filter(item=> item.userName.includes(payload.searchName));
-          yield put({ type: 'searchData', payload: { dataSource: newRightData, dir: 'right' } })
-        }else{
-          yield put({ type: 'novalueSearch', payload: { dir: 'right'} })
-        }
-      }
-      if (callback) callback();
+      if (callback) callback(data.result);
     },
     // 管理员添加人员
     *addUser({ payload,callback },{ put, call }){
       const data = yield call(subMgtService.addUser,payload);
       if(data.status){
         message.success('添加人员成功');
-        yield put({ type: 'getSubSystemsManager', payload: { deployOrgSubSystemGuid: payload.deployOrgSubSystemGuid }});
+        let values = {};
+        if(payload.deployOrgSubSystemGuid){
+          values.deployOrgSubSystemGuid = payload.deployOrgSubSystemGuid
+        }else{
+          values.deptGuid = payload.deptGuid
+        }
+        yield put({ type: 'getSubSystemsManager', payload: values });
         if (callback) callback();
       }else{
         message.error(data.msg||'添加人员失败');
@@ -93,7 +50,13 @@ export default {
       const data = yield call(subMgtService.removeUser, payload);
       if(data.status){
         message.success('移除人员成功');
-        yield put({ type: 'getSubSystemsManager', payload: { deployOrgSubSystemGuid: payload.deployOrgSubSystemGuid }});
+        let values = {};
+        if(payload.deployOrgSubSystemGuid){
+          values.deployOrgSubSystemGuid = payload.deployOrgSubSystemGuid
+        }else{
+          values.deptGuid = payload.deptGuid
+        }
+        yield put({ type: 'getSubSystemsManager', payload: values });
         if (callback) callback();
       }else{
         message.error(data.msg||'移除人员失败');
@@ -107,6 +70,16 @@ export default {
       }else{
         message.error(data.msg||'获取系统菜单失败')
       }
+    },
+    // 编辑系统菜单
+    *updateSystemMenu({ payload , callback },{ call }){
+      const data = yield call( subMgtService.updateSubSystemsMenus, payload);
+      if(data.status){
+        message.success('修改成功');
+      }else{
+        message.error(data.msg);
+      }
+      if(callback) callback();
     }
   },
   subscriptions: {

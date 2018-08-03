@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Menu, Icon, message, Spin } from 'antd';
 import { connect } from 'dva';
-// import menu from '../../common/menu';
 import styles from './style.css';
 // import { getMenuData } from '../../utils/utils'
 const SubMenu = Menu.SubMenu;
@@ -39,16 +38,16 @@ class SiderMenu extends PureComponent{
   constructor(props){
     super(props)
     this.state = {
+      menuList: [],
       selectedKeys: [],
       openKeys: [],
-      firstTime: true,
       recordKeys: []//修复官方hover bug
     }
   }
   
   setSubTitle = (menuList,path) =>{
     let pathname = path ? path : window.location.href.split('#')[1];
-    let target = {};
+    let menuName = '';
     if(menuList.length){
       menuList.map((item,index)=>{
         let { subMenus } = item;
@@ -57,23 +56,21 @@ class SiderMenu extends PureComponent{
               let childMenu = menu.subMenus;
               childMenu.map(d=>{
                 if(d.path === pathname){
-                  target.mainTitle = item.name;
-                  target.subTitle = d.name
+                  menuName = d.name
                 }
                 return null;
               })
           }else{
             if(menu.path === pathname){
-              target.mainTitle = item.name;
-              target.subTitle = menu.name
+              menuName = menu.name
             }
           }
           return null;
         });
         return null;
       });
-    }
-    this.props.cb(target)
+    };
+    this.props.cb(menuName)
   }
   changeActiveKeys = () => {
     const href = window.location.href;
@@ -82,13 +79,53 @@ class SiderMenu extends PureComponent{
     const keys = pathname.split('/');
     let selectedKeys = '', newOpenKeys = [];
     selectedKeys = pathname;
-    newOpenKeys = openKeys.length ? openKeys : [ keys.slice(0, 2).join('/') ];
+    newOpenKeys = openKeys.length ? openKeys : [ keys.slice(0, 2).join('') ];
     this.setState({selectedKeys, openKeys: newOpenKeys});
   }
   componentDidMount = () => {
+    this.genMenuData();
     this.changeActiveKeys();
-    // this.setSubTitle(menu)
-    this.setSubTitle(this.props.users.menuList)
+  }
+  genMenuData = () =>{
+    const { menuList } = this.props.users;
+    // 页面刷新 redux 数据清空 重新获取菜单
+    if(!menuList.length){
+      if(localStorage.getItem('subSystemUser')){
+        let userInfo = JSON.parse(localStorage.getItem('subSystemUser'));
+        this.props.dispatch({
+          type: 'users/setUserInfo',
+          payload: userInfo
+        });
+        if(userInfo.subSystemFlag === undefined){
+          this.props.dispatch({
+            type: 'users/getUserM',
+            payload: {},
+            callback: (data)=>{
+              this.setState({ menuList: data });
+              this.setSubTitle(data)
+            }
+          })
+        }else{
+          // if(userInfo.subSystemFlag){
+            let { subSystemId, deptGuid } = userInfo;
+            this.props.dispatch({
+              type: 'users/findMenusByUser',
+              payload: { subSystemId, deptGuid },
+              callback: (data)=>{
+                this.setState({ menuList: data });
+                this.setSubTitle(data)
+                this.props.dispatch({
+                  type: 'users/subsystemInfo',
+                  payload: { subSystemId, deptGuid }
+                })
+              }
+            });
+          // }
+        }
+      }
+    }else{
+      this.setState({ menuList: this.props.users.menuList })
+    }
   }
   onOpenChange = openKeys => {
     let changeKey = openKeys.length ? openKeys[openKeys.length - 1] : [];
@@ -98,10 +135,10 @@ class SiderMenu extends PureComponent{
         if (openKeys.length === 1) {
           changeKey = [];
         } else {
-          changeKey = [changeKeyArr.slice(0, 2).join('/'), changeKeyArr.slice(0, 3).join('/') ];
+          changeKey = [changeKeyArr.slice(0, 2).join(''), changeKeyArr.slice(0, 3).join('') ];
         }
       } else {
-        changeKey = [ changeKeyArr.slice(0, 2).join('/') ]
+        changeKey = [ changeKeyArr.slice(0, 2).join('') ]
       }
     } else {
       changeKey = [];
@@ -119,18 +156,12 @@ class SiderMenu extends PureComponent{
     return null;
   }
   componentDidUpdate(prevProps, prevState){
-    this.changeActiveKeys();
+    const pathname = window.location.href.split('#')[1];
+    if(prevState.selectedKeys !== pathname){
+      this.setState({ selectedKeys: pathname })
+    }
+    
   }
-  // componentWillReceiveProps = (nextProps) => {
-  //   this.changeActiveKeys();
-  //   if (nextProps.collapsed) {
-  //     this.setState({ openKeys: [] })
-  //   }
-  //   // if( this.state.firstTime && nextProps.users.menuList !== this.props.users.menuList){
-  //   //   this.setSubTitle(nextProps.users.menuList);
-  //   //   this.setState({ firstTime: false })
-  //   // }
-  // }
   render(){
     const { history } = this.props;
     const { menuList } = this.props.users;
@@ -138,26 +169,24 @@ class SiderMenu extends PureComponent{
     return (
     <div>
       <div className='logoWrapper'>
-        {/* <img src={require('../../assets/img/logo2.png')} alt='logo' className='logo'/> */}
-        {/* <h1 className='logoDesc'>P H X L</h1> */}
-        <div className='logo'></div>
+        <img src={require('../../assets/img/logo.png')} alt='logo' className='logo'/>
+        <h1 className='logoDesc'>P H X L</h1>
+        {/* <div className='logo'></div> */}
       </div>
       {
-        // menu && menu.length ? 
         menuList && menuList.length ?
         <Menu 
           className={styles.fullscreen}
-          theme="light" 
+          theme="dark" 
           mode="inline"
-          selectedKeys={[selectedKeys]}
+          selectedKeys={[selectedKeys+'']}
           onOpenChange={this.onOpenChange}
           openKeys={openKeys}
           onClick={item => {
             this.changeActiveKeys();
             const { pathname } = this.props.history.location;
             if (pathname !== item.key){
-              this.setSubTitle(this.props.users.menuList, `${item.key}`)
-              // this.setSubTitle(menu, `${item.key}`)
+              this.props.cb( item.item.props.name )
               history.push({pathname: `${item.key}`})
             }else{
               message.info('您正位于该页面')
@@ -165,7 +194,7 @@ class SiderMenu extends PureComponent{
           }}
         >
           {
-            createMenu(this.props.users.menuList)
+            createMenu(this.state.menuList)
             // createMenu(getMenuData(history.location.pathname.split('/')[1], menu))
             // createMenu(getMenuData(history.location.pathname.split('/')[1], this.props.users.menuList))
           }

@@ -1,8 +1,8 @@
-import * as clinicalSystemService from '../../services/clinicalSystem';
+import * as userSystemService from '../../services/clinicalSystem';
 import { message } from 'antd';
 
 export default {
-  namespace: 'clinicalSystem',
+  namespace: 'userSystem',
   state: {
     
   },
@@ -12,7 +12,7 @@ export default {
   effects: {
     //  临床科室子系统配置管理 保存
    *saveDeptConfig({ payload,callback },{ call }){
-     const data = yield call(clinicalSystemService.saveDeptConfig, payload);
+     const data = yield call(userSystemService.saveDeptConfig, payload);
      if(data.status){
        message.success('保存成功');
        if(callback) callback()
@@ -21,7 +21,7 @@ export default {
      }
    },
    *resetPwd({ payload, callback },{ call }){
-    const data = yield call(clinicalSystemService.resetOrgUserPwd,payload);
+    const data = yield call(userSystemService.resetOrgUserPwd,payload);
     if(data.status){
       message.success('重置密码成功');
       if(callback) callback();
@@ -30,7 +30,7 @@ export default {
     }
    },
    *addOrUpdateUser({ payload, callback },{ call }){
-    const data = yield call(clinicalSystemService.addOrUpdateOrgUser,payload);
+    const data = yield call(userSystemService.addOrUpdateOrgUser,payload);
     if(data.status){
       message.success('操作成功');
       if(callback) callback();
@@ -38,8 +38,8 @@ export default {
       message.error(data.msg||'操作失败')
     }
    },
-   *getPowerMenu({ payload,callback },{ call }){
-    const data = yield call(clinicalSystemService.getOrgUserMenus,payload);
+   *getPowerMenu({ payload, callback },{ call }){
+    const data = yield call(userSystemService.getOrgUserMenus,payload);
     if(data.status){
       if(callback) callback(data.result);
     }else{
@@ -47,7 +47,7 @@ export default {
     }
    },
    *updateUserMenus({ payload,callback },{ call }){
-    const data = yield call(clinicalSystemService.updateUserMenus,payload);
+    const data = yield call(userSystemService.updateUserMenus,payload);
     if(data.status){
       message.success('保存成功');
       if(callback) callback(data.result);
@@ -58,16 +58,20 @@ export default {
    },
    // 科室权限
    *searchDeptList({ payload,callback },{ call }){
-    const data = yield call(clinicalSystemService.selectLoginOrgDept,payload);
-    if(data.length){
-      if(callback) callback(data);
+    const data = yield call(userSystemService.selectLoginOrgDept, payload);
+    if(data.status){
+      if(data.result.length){
+        if(callback) callback(data.result);
+      }else{
+        message.warning('暂无科室，请添加');
+      }
     }else{
-      message.warning('暂无科室，请添加');
+      message.error(data.msg||'获取科室失败')
     }
    },
    // 获取科室权限下 科室对应的菜单
    *genDeptMenus({ payload,callback },{ call }){
-    const data = yield call(clinicalSystemService.getDeptMenus,payload);
+    const data = yield call(userSystemService.getDeptMenus,payload);
     if(data.status){
       if(callback) callback(data.result);
     }else{
@@ -76,7 +80,7 @@ export default {
    },
    // 编辑科室权限 科室对应菜单(保存按钮)
    *saveUserMenu({ payload,callback },{ call }){
-    const data = yield call(clinicalSystemService.saveUserMenus,payload);
+    const data = yield call(userSystemService.saveUserMenus,payload);
     if(data.status){
       message.success('保存成功')
       if(callback) callback(data.result);
@@ -86,7 +90,7 @@ export default {
    },
    //  非 临床科室子系统配置管理  保存
    *saveStorageConfig({ payload,callback },{ call }){
-    const data = yield call(clinicalSystemService.saveStorageConfig, payload);
+    const data = yield call(userSystemService.saveStorageConfig, payload);
     if(data.status){
       message.success('保存成功');
       if(callback) callback()

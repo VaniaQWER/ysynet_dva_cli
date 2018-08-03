@@ -17,6 +17,15 @@ export function login(options){
     body: options
   })
 }
+
+export function getUserInfo(options){
+  return request(`${_local}/login/getUserInfo`,{ //用户登陆
+    methods: 'POST',
+    type: 'formData',
+    body: options
+  })
+}
+
 export function getDeployOrgName(options){
   return request(`${_local}/login/getDeployOrgName`,{ //获取机构名称
     methods: 'POST',

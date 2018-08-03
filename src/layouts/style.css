@@ -22,7 +22,25 @@
   width: 256px;
   height: 100vh;
 }
-
+.triggerWrapp{
+  position: fixed;
+  text-align: center;
+  bottom: 0;
+  cursor: pointer;
+  height: 48px;
+  line-height: 48px;
+  color: #fff;
+  background: #002140;
+  z-index: 1;
+  -webkit-transition: all .2s;
+  transition: all .2s;
+}
+.trigger{
+  font-size: 18px;
+  padding: 0 24px;
+  cursor: pointer;
+  transition: color .3s;
+}
 .header {
   background: #fff;
   height: 58px;

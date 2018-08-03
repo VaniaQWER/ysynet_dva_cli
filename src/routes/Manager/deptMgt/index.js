@@ -1,12 +1,12 @@
 import React, { PureComponent } from 'react';
-import { Row, Col, Form, Input, Button, Select, Modal, Table, Popconfirm, Checkbox, message,Tooltip } from 'antd';
+import { Row, Col, Form, Input, Button, Select, Modal, Table, Popconfirm, Checkbox, message,Tooltip, Badge } from 'antd';
 import RemoteTable from '../../../components/TableGrid';
 import jxh from '../../../api/jxh';
 import { connect } from 'dva';
 import { formItemLayout } from '../../../utils/commonStyles';
 const FormItem = Form.Item;
 const { Option } = Select;
-const { TextArea } = Input;
+const { TextArea, Search } = Input;
 
 const EditableCell = ({ editable, value, onChange }) => (
   <div>
@@ -16,6 +16,10 @@ const EditableCell = ({ editable, value, onChange }) => (
   }
   </div>
 );
+const managerModalColumns = [{
+  title: '管理员',
+  dataIndex: 'userName'
+}];
 class SearchForm extends PureComponent{
   handleSearch = (e) => {
     e.preventDefault();
@@ -29,7 +33,7 @@ class SearchForm extends PureComponent{
       <Form className="ant-advanced-search-form" onSubmit={this.handleSearch}>
         <Row >
           <Col span={10} key={1}>
-            <FormItem {...formItemLayout} label={'名称'}>
+            <FormItem {...formItemLayout} label={'科室名称'}>
               {getFieldDecorator('searchName',{
                 initialValue: ''
               })(
@@ -148,9 +152,27 @@ class DeptMgt extends PureComponent{
     visible: false,
     loading: false,
     addressVisible: false,
+    managerVisible: false,
     record: {},
     count: 0,
     addressData: [],
+    LeftIndeterminate: true,
+    leftCheckAll: false,
+    rightIndeterminate: true,
+    rightCheckAll: false,
+    leftDataSource: [],
+    leftCacheData: [],
+    leftSelected: [],
+    leftLoading: false,
+    addLoading: false,
+    removeLoading: false,
+    rightDataSource: [],
+    rightCacheData: [],
+    rightSelected: [],
+    selected: [], // 系统菜单选中key
+    selectedRows: [], //系统菜单选中项
+    systemMenuList: [],
+    dirtyClick: false,
     ModalColumns: [{
         title: '联系人',
         dataIndex: 'linkman',
@@ -338,8 +360,173 @@ class DeptMgt extends PureComponent{
     };
     this.setState({ addressData: [ ...this.state.addressData, newData],count: this.state.count + 1 });
   }
+  // 分配管理员
+  manager = (record) =>{
+    this.setState({ record });
+    this.props.dispatch({
+      type: 'subSystemMgt/getSubSystemsManager',
+      payload: { deptGuid: record.deptGuid },
+      callback: (data) => {
+        let leftDataSource = [], rightDataSource = []; 
+        data.map(item => {
+          if(item.isSelected === 1){
+            leftDataSource.push(item);
+          }else{
+            rightDataSource.push(item);
+          }
+          return null;
+        })
+        this.setState({ managerVisible: true, leftDataSource, leftCacheData: leftDataSource,
+           rightDataSource,rightCacheData: rightDataSource })
+      }
+    })
+  }
+  // 系统菜单
+  systemMenu = (record) =>{ 
+    this.setState({ record });
+    this.props.dispatch({
+      type: 'deptMgt/genDeptMenus',
+      payload: { deptGuid: record.deptGuid },
+      callback: (data) =>{
+        let selected = [];
+        data.map((item,index)=>{
+          if(item.isSelected === "1"){
+            selected.push(item.id);
+            if(item.children.length){
+              item.children.map((child,idx)=>{
+                selected.push(child.id);
+                return null;
+              });
+            }
+          }else{
+            if(item.children.length){
+              item.children.map((child,idx)=>{
+                if(child.isSelected === "1"){
+                  selected.push(child.id);
+                }
+                return null
+              })
+            }
+          }
+          return null;
+        });
+        this.setState({ menuVisible: true, systemMenuList: data, selected })
+      }
+    })
+  }
+  leftSearch = (value) =>{
+    this.setState({ leftLoading: true });
+    let { leftCacheData,leftDataSource } = this.state;
+    if(value){
+      let newData = leftDataSource.filter(item=> item.userName.includes(value));
+      this.setState({ leftDataSource: newData,leftLoading: false });
+    }else{
+      this.setState({ leftDataSource: leftCacheData, leftLoading: false })
+    }
+  }
+  rightSearch = (value) =>{
+    console.log(value,'value')
+    this.setState({ rightLoading: true });
+    let { rightCacheData, rightDataSource } = this.state;
+    if(value){
+      let newData = rightDataSource.filter(item=> item.userName.includes(value));
+      this.setState({ rightDataSource: newData, rightLoading: false });
+    }else{
+      this.setState({ rightDataSource: rightCacheData, rightLoading: false })
+    }
+  }
+  addUser = () =>{
+    this.setState({ addLoading: true });
+    let { leftDataSource, rightDataSource, rightSelectedRows } = this.state;
+    let newLeftData = [ ...leftDataSource, ...rightSelectedRows];
+    let  newRightData = [];
+    rightDataSource.map(item => {
+      let flag = true;
+      rightSelectedRows.map((list,idx)=>{
+        if(item.userId === list.userId){
+          flag = false;
+        }
+        return null;
+      });
+      if(flag){
+        newRightData.push(item)
+      }
+      return null;
+    });
+    this.props.dispatch({
+      type: 'subSystemMgt/addUser',
+      payload: { userIds: this.state.rightSelected, deptGuid: this.state.record.deptGuid },
+      callback: ()=>this.setState({ addLoading: false,rightSelected: [],rightCheckAll: false,
+        leftDataSource: newLeftData, leftCacheData: newLeftData, rightDataSource: newRightData,rightCacheData: newRightData })
+    })
+  }
+  removeUser = () =>{
+    let { leftDataSource, rightDataSource, leftSelectedRows, leftSelected } = this.state;
+    if(leftDataSource.length === leftSelected.length){
+      return message.warning('请保留至少一个子系统管理员')
+    }
+    let newRightData = [...rightDataSource, ...leftSelectedRows];
+    let newLeftData = [];
+    leftDataSource.map(item => {
+      let flag = true;
+      leftSelectedRows.map((list,idx)=>{
+        if(item.userId === list.userId){
+          flag = false;
+        }
+        return null;
+      });
+      if(flag){
+        newLeftData.push(item)
+      }
+      return null;
+    });
+    console.log(newLeftData,'newLeftData')
+    this.setState({ removeLoading: true });
+    this.props.dispatch({
+      type: 'subSystemMgt/removeUser',
+      payload: { userIds: this.state.leftSelected, deptGuid: this.state.record.deptGuid },
+      callback: ()=>this.setState({ removeLoading: false,leftSelected: [],leftCheckAll: false,
+        leftDataSource: newLeftData,leftCacheData: newLeftData,rightDataSource: newRightData,rightCacheData: newRightData
+       })
+    })
+  }
+  saveDeptMenus = () =>{
+    let { selectedRows, record } = this.state;
+    let postData = {}, menuIds = [];
+    postData.deptGuid = record.deptGuid;
+    let newSelectRow = selectedRows.filter(item => item.level === 1);
+    newSelectRow.map(item => menuIds.push(item.id));
+    if(newSelectRow.length === 0){
+      return message.warning('请至少勾选一项子菜单')
+    }
+    postData.menuIds = menuIds;
+    this.setState({ dirtyClick: true });
+    this.props.dispatch({
+      type: 'deptMgt/saveDeptMenus',
+      payload: postData,
+      callback: () =>{
+        this.setState({ dirtyClick: false, menuVisible: false });
+      }
+    })
+  }
   render(){
-    const { visible, title, record, isEdit, loading, addressVisible, tableLoading, ModalColumns, addressData } = this.state;
+    const { visible, title, record, isEdit, loading, addressVisible, managerVisible, menuVisible,
+      tableLoading, ModalColumns, addressData,leftDataSource,rightDataSource,leftLoading,rightLoading,addLoading,removeLoading,dirtyClick,systemMenuList,selected } = this.state;
+      const menuColumns = [{
+        title: '菜单名称',
+        dataIndex: 'name',
+        key: 'name',
+        width: 200,
+      },{
+        title: '路径',
+        dataIndex: 'routerName',
+        key: 'routerName'
+      },{
+        title: '备注',
+        dataIndex: 'tfRemark',
+        key: 'tfRemark',
+        width: 200,
+      }]
     const columns = [{
         title: '科室名称',
         dataIndex: 'deptName'
@@ -348,7 +535,7 @@ class DeptMgt extends PureComponent{
         dataIndex : 'fstate',
         width: '80',
         render:  FSTATE => {
-          return FSTATE === '00'? <span style={{ color: 'red' }}>停用</span>: FSTATE === '01'?<span style={{ color: 'green' }}>启用</span>:''
+          return <Badge status={FSTATE==='01'?'success':'error'} text={FSTATE==="01" ? "启用" :"停用"}/>
         }
     },{
         title : '编码',
@@ -367,18 +554,22 @@ class DeptMgt extends PureComponent{
     },{
         title: '操作',
         dataIndex: 'actions',
+        width: 250,
+        fixed: 'right',
         render: (text,record,index) =>{
           return (
             <span>
               <a onClick={this.edit.bind(null,record)}>编辑</a>
-              <a style={{ marginLeft: 8 }} onClick={this.address.bind(null,record)}>地址</a>
+              <a style={{ margin: '0 8px' }} onClick={this.address.bind(null,record)}>地址</a>
+              <a style={{ margin: '0 8px' }} onClick={this.manager.bind(null,record)}>管理员</a>
+              <a onClick={this.systemMenu.bind(null,record)}>系统菜单</a>
             </span>
           )
         }
     }]
     return (
       <div>
-        <Row className='ant-row-bottom'>
+        <Row>
           <Col span={4}>
             <Button type='primary' onClick={()=>{
               if(this.modalForm){
@@ -387,15 +578,155 @@ class DeptMgt extends PureComponent{
               this.setState({ visible: true,title: '新增',isEdit: false })
             }}>添加</Button>
           </Col>
-          <Col span={14} offset={6} style={{ textAlign: 'right' }}>
+          <Col span={15} offset={5} style={{ textAlign: 'right' }}>
             <WrapperForm  query={this.queryHandle}/>
           </Col>
         </Row>
         <Modal
+          className='ysynet-ant-modal'
+          title='管理员'
+          visible={managerVisible}
+          width={1100}
+          onCancel={()=>this.setState({ managerVisible: false })}
+          footer={null}
+        >
+          <Row className='ysynet-transfer'>
+            <Col span={11} >
+              <div className='ysynet-transfer-header'>
+                <div>
+                  <Checkbox 
+                    disabled={leftDataSource.length === 0? true: false}
+                    indeterminate={this.state.LeftIndeterminate}
+                    onChange={this.onLeftCheckAllChange}
+                    checked={this.state.leftCheckAll}
+                  />
+                  <span style={{ marginLeft: 16 }}>{'已添加人员'}</span>
+                </div>
+                <div>
+                  <span><span>{this.state.leftSelected.length ? `${this.state.leftSelected.length}/`:'' }</span>{leftDataSource.length}</span>
+                </div>
+              </div>
+              <div style={{ height: 412 }}>
+                <Search 
+                  style={{ margin: '10px 0' }}
+                  placeholder='请输入搜索内容'
+                  onSearch={this.leftSearch}
+                />
+                 <div style={{ height: 380,maxHeight: 380, overflow: 'auto' }}>
+                  <Table 
+                      dataSource={leftDataSource}
+                      columns={managerModalColumns}
+                      loading={leftLoading}
+                      pagination={false}
+                      showHeader={false}
+                      size={'small'}
+                      rowKey={'userId'}
+                      rowSelection={{
+                        selectedRowKeys: this.state.leftSelected,
+                        onChange: (selectedRowKeys, selectedRows) => {
+                        this.setState({
+                          leftSelected: selectedRowKeys,
+                          leftSelectedRows: selectedRows,
+                          LeftIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < leftDataSource.length),
+                          leftCheckAll: selectedRowKeys.length === leftDataSource.length,
+                          })
+                        }
+                      }}
+                    />
+                 </div>
+              </div>
+            </Col>
+            <Col span={2} style={{ textAlign:'center',alignSelf:'center' }}>
+              <Button type='primary'
+                loading={addLoading}
+                disabled={this.state.rightSelected.length === 0? true : false} 
+                onClick={this.addUser}>添加</Button>
+              <Button type='primary'
+                loading={removeLoading} 
+                style={{ marginTop: 16 }} 
+                disabled={this.state.leftSelected.length === 0 ? true : false} 
+                onClick={this.removeUser}>移除</Button>
+            </Col>
+            <Col span={11}>
+              <div className='ysynet-transfer-header'>
+                <div>
+                  <Checkbox 
+                    disabled={rightDataSource.length === 0? true: false}
+                    indeterminate={this.state.rightIndeterminate}
+                    onChange={this.onRightCheckAllChange}
+                    checked={this.state.rightCheckAll}
+                  />
+                  <span style={{ marginLeft: 16 }}>未添加人员</span>
+                </div>
+              </div>
+              <div style={{ height: 412}}>
+                <Search 
+                  style={{ margin: '10px 0' }}
+                  onSearch={this.rightSearch}
+                  placeholder='请输入搜索内容'
+                />
+                <div style={{ height: 380,maxHeight: 380, overflow: 'auto' }}>
+                  <Table 
+                    columns={managerModalColumns}
+                    pagination={false}
+                    showHeader={false}
+                    loading={rightLoading}
+                    dataSource={rightDataSource}
+                    size={'small'}
+                    rowKey={'userId'}
+                    rowSelection={{
+                      selectedRowKeys: this.state.rightSelected,
+                      onChange: (selectedRowKeys, selectedRows) => {
+                      this.setState({
+                        rightSelected: selectedRowKeys, 
+                        rightSelectedRows: selectedRows,
+                        rightIndeterminate: !!selectedRowKeys.length && (selectedRowKeys.length < rightDataSource.length),
+                        rightCheckAll: selectedRowKeys.length === rightDataSource.length,
+                        })
+                      }
+                    }}
+                  />
+                </div> 
+              </div>
+            </Col>
+          </Row>
+        </Modal>
+        <Modal
+          title='系统菜单'
+          visible={menuVisible}
+          width={1100}
+          onCancel={()=>this.setState({ menuVisible: false })}
+          footer={[
+            <Button key="submit" type='primary' loading={dirtyClick} onClick={this.saveDeptMenus}>
+              确认
+            </Button>,
+            <Button key="back"  type='default' onClick={()=>this.setState({ menuVisible: false })}>取消</Button>
+          ]}
+        >
+          <Table 
+            rowKey='id'
+            columns={menuColumns}
+            dataSource={systemMenuList}
+            scroll={{ x: '100%' }}
+            pagination={false}
+            bordered
+            size='small'
+            rowSelection={{
+              getCheckboxProps: record => ({
+                defaultChecked: record.isSelected === 1
+              }),
+              selectedRowKeys: selected,
+              onChange: (selectedRowKeys, selectedRows) => {
+                this.setState({selected: selectedRowKeys, selectedRows: selectedRows})
+              }
+            }}
+          
+          />
+        </Modal>
+        <Modal
           title={title}
           visible={visible}
           width={460}
-          style={{ top: 20 }}
           onCancel={()=>this.setState({ visible: false })}
           footer={null}
         >
@@ -410,7 +741,6 @@ class DeptMgt extends PureComponent{
         <Modal
           title='科室地址'
           width={1100}
-          style={{ top: 20 }}
           visible={addressVisible}
           onCancel={()=>this.setState({ addressVisible: false })}
           footer={null}

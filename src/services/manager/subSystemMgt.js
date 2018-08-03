@@ -41,6 +41,13 @@ export function getSubSystemsMenus(options){
     body: options
   })
 }
+
+export function updateSubSystemsMenus(options){
+  return request(`${_local}/hscmSubSystemController/updateSubSystemsMenus`,{ //精细化-- 子系统管理 编辑菜单别名、排序和备注
+    methods: 'POST',
+    body: options
+  })
+}
 /* 
   子系统管理员相关
 */
@@ -70,6 +77,15 @@ export function addOrUpdate(options){
 /* 
   科室管理相关
 */
+export function saveDeptMenus(options){
+  return request(`${_local}/deptSubSystemController/saveDeptMenus`,{ //精细化-- 科室管理 分配菜单权限
+    methods: 'POST',
+    type: 'formData',
+    body: options
+  })
+}
+
+
 export function insertOrgDept(options){
   return request(`${_local}/departmentController/insertOrgDept`,{ //精细化-- 科室管理  新增 机构科室
     methods: 'POST',

@@ -2,7 +2,7 @@
  * @Author: wwb 
  * @Date: 2018-07-26 10:05:37 
  * @Last Modified by: wwb
- * @Last Modified time: 2018-07-26 12:06:02
+ * @Last Modified time: 2018-07-31 22:14:28
  */
 
 import React, { PureComponent } from 'react';
@@ -28,12 +28,12 @@ class DeptPower extends PureComponent{
     this.genDeptList(values)
   }
   genDeptList = (value) =>{
-    this.setState({ deptList: [] })
+    // this.setState({ deptList: [] })
     this.props.dispatch({
-      type: 'clinicalSystem/searchDeptList',
+      type: 'userSystem/searchDeptList',
       payload: value,
       callback: (data)=>{
-        this.setState({ deptList: data,dataSource: [],selected: [] })
+        this.setState({ deptList: data, dataSource: [],selected: [] })
       }
     })
   }
@@ -58,7 +58,7 @@ class DeptPower extends PureComponent{
   searchMenu = (values) =>{
     this.setState({ tableLoading: true });
     this.props.dispatch({
-      type: 'clinicalSystem/genDeptMenus',
+      type: 'userSystem/genDeptMenus',
       payload: values,
       callback: (data) =>{
         let selected = [];
@@ -96,7 +96,7 @@ class DeptPower extends PureComponent{
     postData.userId = this.props.users.userInfo.userId;
     postData.menuIds = selected;
     this.props.dispatch({
-      type: 'clinicalSystem/saveUserMenu',
+      type: 'userSystem/saveUserMenu',
       payload: postData,
       callback: () => {
         this.setState({ dirtyClick: false });
@@ -124,9 +124,9 @@ class DeptPower extends PureComponent{
     return (
       <div className='ysynet-siderMenu-noborder'>
         <div style={{ background: '#fff',display: 'flex' }}>
-          <div style={{ background: '#fff',borderRight: 'dashed 1px #ccc',padding: '0 10px',width: 256 }}>
+          <div style={{ borderRight:' dashed 1px rgb(217,217,217)',width: 208 }}>
             <Search 
-              style={{ marginBottom: 16 }}
+              style={{ marginBottom: 16,paddingRight: 12 }}
               placeholder='请输入科室名称'
               onSearch={value=>this.searchDept(value)}
             />
@@ -159,7 +159,7 @@ class DeptPower extends PureComponent{
               <Spin tip="数据加载中" style={{width: '100%', height: 200, marginTop: 200}}/>
             }
           </div>
-          <div style={{ padding: '0 16px',flex: 1 }}>
+          <div style={{ paddingLeft: 16, width: '100%' }}>
             <Row className='ant-row-bottom'>
               <Col span={10}>
                 <span>权限菜单：</span>
