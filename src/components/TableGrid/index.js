@@ -15,24 +15,18 @@ class RemoteTable extends Component {
       searchParams: {}
     }
   }
-  /* static getDerivedStateFromProps(nextProps, prevState){
-    if ((nextProps.url !== prevState.url) || 
-      (typeof nextProps.query === 'string' ? nextProps.query !== prevState.query : !objCompare(nextProps.query, prevState.query))) {
-        return {
-          flag: null,
-          query: nextProps.query,
-          url: nextProps.url
-        }
-        // this.fetch(nextProps.query, nextProps.url)
+  componentDidUpdate = (prevProps, prevState) =>{
+    if ((prevProps.url !== this.props.url) || 
+      (typeof prevProps.query === 'string' ? prevProps.query !== this.props.query : !objCompare(prevProps.query, this.props.query))) {
+        this.fetch(this.props.query, this.props.url)
     }
-    return null;
-  } */
-  componentWillReceiveProps = (nextProps) => {
+  }
+  /* componentWillReceiveProps = (nextProps) => {
     if ((nextProps.url !== this.props.url) || 
       (typeof nextProps.query === 'string' ? nextProps.query !== this.props.query : !objCompare(nextProps.query, this.props.query))) {
         this.fetch(nextProps.query, nextProps.url)
     }
-  }
+  } */
   handleTableChange = (pagination, filters, sorter) => {
     const pager = this.state.pagination;
     pager.pageSize = pagination.pageSize;
@@ -69,7 +63,8 @@ class RemoteTable extends Component {
       }).then(res => res.json())
         .then((data)=> {
           if(!data.status){
-            message.error(data.msg);
+            this.setState({ loading: false })
+            return message.error(data.msg);
           }
           pagination.total = data.result.records;
           pagination.showSizeChanger = true;

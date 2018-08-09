@@ -25,9 +25,8 @@ const powerColumns = [{
   key: 'tfRemark'
 }];
 // subSystemId === '02'  科室工作站 deptGuid: 决定是临床子系统还是非临床子系统
-let { deptGuid, subSystemId, subSystemName } = JSON.parse(localStorage.getItem('subSystemUser'));
+// let { deptGuid, subSystemId, subSystemName } = JSON.parse(localStorage.getItem('subSystemUser'));
 // let flag = deptGuid && subSystemId ==='02'? true: false;// flag  true: 临床科室子系统 false 非临床
-console.log(deptGuid,subSystemId,subSystemName, 'name')
 class UserMgt extends PureComponent{
   state = {
     query: {
@@ -38,9 +37,9 @@ class UserMgt extends PureComponent{
     
     title: '添加用户',
     record: {},
-    deptGuid: deptGuid,
-    subSystemId: subSystemId,
-    subSystemName: subSystemName,
+    deptGuid: '',
+    subSystemId: '',
+    subSystemName: '',
     visible: false,
     isEdit: false,
     dirtyClick: false,
@@ -53,11 +52,12 @@ class UserMgt extends PureComponent{
     selectedRows: []
   }
   componentDidMount = () =>{
+    console.log(this.props.users,'users')
     let { deptGuid, subSystemId, subSystemName } = this.props.users.userInfo || JSON.parse(localStorage.getItem('subSystemUser'));
     console.log(deptGuid,subSystemId,subSystemName,'DidMount')
-    let flag = deptGuid && subSystemId ==='02'? true: false;// flag  true: 临床科室子系统 false 非临床
-    this.setState({ flag });
-  }
+    let flag = (deptGuid && subSystemId ==='02')? true: false;// flag  true: 临床科室子系统 false 非临床
+    this.setState({ flag, deptGuid, subSystemId, subSystemName });
+  } 
   queryHandle = (query)=>{
     this.setState({ query });
     this.refs.table.fetch(query);
@@ -190,17 +190,16 @@ class UserMgt extends PureComponent{
       })
     })
   }
-  onChange = (value,key) =>{
+  genData = (value,key) =>{
     let { query } = this.state;
     let newQuery = Object.assign(query,{ [key]: value });
     this.refs.table.fetch(newQuery);
-    this.setState({ query: newQuery, [key]: value});
+    this.setState({ query: newQuery });
   }
   render(){
     const { query, title, visible, isEdit, dirtyClick, record, flag, subSystemName, deptGuid, subSystemId,
       powerVisible, powerData, loading, buttonLoading } = this.state;
     const { getFieldDecorator } = this.props.form;
-    console.log(deptGuid,'deptGuid')
     const columns = [{
       title: '账号',
       dataIndex: 'userNo',
@@ -273,30 +272,37 @@ class UserMgt extends PureComponent{
               {
                 flag ? 
                 <div>
-                  <label style={{ padding: '0 5px' }}>科室: </label>
-                  <Select 
-                    onSelect={(value) => {
-                      this.onChange(value,'deptGuid')} }
-                    defaultValue={deptGuid}
-                    value={deptGuid}
-                    style={{ width: 200 }}
-                  >
-                    <Option key={0} value="">全部</Option>
-                    <Option key={1} value={deptGuid}>{subSystemName}</Option>
-                  </Select>
+                  {
+                    deptGuid &&
+                    <div>
+                      <label style={{ padding: '0 5px' }}>科室: </label>
+                      <Select 
+                        onSelect={(value) => this.genData(value,'deptGuid')}
+                        value={deptGuid}
+                        style={{ width: 200 }}
+                      >
+                        <Option key={0} value="">全部</Option>
+                        <Option key={1} value={deptGuid}>{subSystemName}</Option>
+                      </Select>
+                    </div>
+                  }
                 </div>
                 :
                 <div>
-                  <label style={{ padding: '0 5px' }}>子系统: </label>
-                  <Select 
-                    onSelect={(value) => this.onChange(value,'subSystemId') }
-                    defaultValue={subSystemId}
-                    value={subSystemId}
-                    style={{ width: 200 }}
-                  >
-                    <Option key={-1} value="">全部</Option>
-                    <Option key={1} value={subSystemId}>{subSystemName}</Option>
-                  </Select>
+                  {
+                    subSystemId &&
+                    <div>
+                      <label style={{ padding: '0 5px' }}>子系统: </label>
+                      <Select 
+                        onSelect={(value) => this.genData(value,'subSystemId')}
+                        defaultValue={subSystemId}
+                        style={{ width: 200 }}
+                      >
+                        <Option value="">全部</Option>
+                        <Option value={subSystemId}>{subSystemName}</Option>
+                      </Select>
+                    </div>
+                  }
                 </div>
               }
             </Col>

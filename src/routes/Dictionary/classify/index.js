@@ -21,8 +21,20 @@ const formItemLayout = {
 class AddOrEditForm extends PureComponent{
   state = {
     orgId: '',
-    orgType: ''
+    orgType: '',
   }
+  /* static getDerivedStateFromProps(nextProps, prevState){
+    console.log(nextProps,prevState)
+    if(nextProps.data.orgName && nextProps.isEdit){
+      return {
+        orgName: nextProps.data.orgName
+      }
+    }else{
+      return {
+        orgName: null
+      }
+    }
+  } */
   handleSubmit = (e) =>{
     e.preventDefault();
     this.props.form.validateFields((err,values)=>{
@@ -33,20 +45,22 @@ class AddOrEditForm extends PureComponent{
       }
     })
   }
+  
   render(){
-    const { isEdit, form, data } = this.props;
-    console.log(isEdit,'isEdit')
+    const { isEdit, form, data, selectDatas } = this.props;
     const { getFieldDecorator } = form;
     return (
       <Form onSubmit={this.handleSubmit}>
         <FormItem {...formItemLayout} label="所属机构" hasFeedback>
-          <FetchSelect  defaultValue={isEdit ? data.orgName: ''} ref='fetchs' url={ysy.ORG_LIST}
+          <FetchSelect  defaultValue={ isEdit ? data.orgName: ''} ref='fetchs' url={ysy.ORG_LIST}
               parmas={'orgType'}
-              cb={(value,orgType) => this.setState({orgId: value,orgType: orgType})}
+              cb={(value,orgType) => {
+                this.setState({ orgId: value, orgType: orgType })
+                this.props.cb(value,orgType)}}
               />
         </FormItem>
         {
-          this.state.orgType === '09'
+          this.props.orgType === '09'
           &&
           <FormItem {...formItemLayout} label="字典分类" hasFeedback>
           {
@@ -54,7 +68,9 @@ class AddOrEditForm extends PureComponent{
               rules: [{ required: true,message: '请选择字典分类' }],
               initialValue: ''
             })(
-            <Select>
+            <Select
+              onSelect={value => this.props.callback(value)}
+            >
               <Option key={'-1'} value=''>请选择</Option>
               <Option key={'00'} value='00'>公用字典</Option>
               <Option key={'01'} value='01'>私有字典</Option>
@@ -65,16 +81,21 @@ class AddOrEditForm extends PureComponent{
         }
         <FormItem {...formItemLayout} label="上级">
           {
-            getFieldDecorator('parentStaticId')(
+            getFieldDecorator('parentStaticId',{
+              initialValue: isEdit ? data.parentStaticId: '' 
+            })(
               <Select 
-                onFocus={this.onFocusSelect}
-                disabled={this.props.form.getFieldValue('staticType')!== ''&& this.state.orgId!=='' ? false: this.state.orgId === "" || this.state.orgType === '09' ? true : false}
+                onFocus={this.props.onFocusSelect}
+                disabled={this.props.form.getFieldValue('staticType')!== ''&& data.orgId!=='' ? false: data.orgId === "" || data.orgType === '09' ? true : false}
                 allowClear={true}
                 showSearch
                 filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
                 >
                 {
-                this.props.selectDatas.map((item,index) => {
+                  selectDatas.length === 0 ?
+                  <Option key={0} value={data.parentStaticId}>{data.pTfComment}</Option>
+                  :
+                  selectDatas.map((item,index) => {
                   return <Option key={index} value={item.value}>{item.text}</Option>
                 })
               }
@@ -210,25 +231,31 @@ class ClassifyMgt extends PureComponent{
     orgId: '',
     sourceOrgId: '',
     newOrgId: '',
-    orgType: null
+    orgType: null,
+    selectDatas: [],
+    newAddOrgId: '',
+    newAddOrgType: ''
   }
   edit = (record) =>{
-    this.setState({ record, visible: true, isEdit: true });
+    this.setState({ record, visible: true, isEdit: true, title: '编辑' });
   }
   onFocusSelect = () =>{
-    let postData = { orgId: this.state.orgId };
+    let postData = { orgId: this.state.record.orgId ? this.state.record.orgId: this.state.orgId };
     if(this.state.orgType === '09'){
-      postData.staticType = this.props.form.getFieldValue('staticType');
+      postData.staticType = this.state.staticType
     }
+    console.log(postData,'postData')
     this.props.dispatch({
       type: 'dictionary/orgStaticInfo',
       payload: postData,
+      callback: (data) => this.setState({ selectDatas: data })
     })
   }
   onFocusSelectSource = () =>{
     this.props.dispatch({
       type: 'dictionary/orgStaticInfo',
-      payload: { orgId: this.state.sourceOrgId }
+      payload: { orgId: this.state.sourceOrgId },
+      callback: (data) => this.setState({ selectDatas: data })
     })
   }
   onFocusSelectNew = () =>{
@@ -258,7 +285,7 @@ class ClassifyMgt extends PureComponent{
         type: 'dictionary/insertStaticInfo',
         payload: values,
         callback: ()=>{
-          this.setState({ visible: false,dirtyClick: false });
+          this.setState({ visible: false,dirtyClick: false, orgType: null });
           this.refs.table.fetch();
         }
       })
@@ -276,8 +303,7 @@ class ClassifyMgt extends PureComponent{
     })
   }
   render(){
-    const { query, title, isEdit, visible, cloneVisible,sourceOrgId,newOrgId } = this.state;
-    const { selectDatas } = this.props.dictionary;
+    const { query, title, isEdit, visible, cloneVisible, sourceOrgId, newOrgId, selectDatas } = this.state;
     const columns = [{
       title: '编码',
       dataIndex: 'tfClo',
@@ -317,7 +343,7 @@ class ClassifyMgt extends PureComponent{
                 if(this.addOrEditForm){
                   this.addOrEditForm.resetFields();
                 }
-                this.setState({ visible: true,title: '新建字典',isEdit: false });
+                this.setState({ visible: true,title: '新建字典',isEdit: false,record: {} });
               }}>
               {'新建分类'}
             </Button>
@@ -325,17 +351,22 @@ class ClassifyMgt extends PureComponent{
           </Col>
         </Row>
         <Modal
+          centered={true}
           title={title}
           visible={visible}
           width={460}
-          onCancel={()=>this.setState({ visible: false })}
+          onCancel={()=>this.setState({ visible: false,isEdit: false })}
           footer={null}
         >
           <WrapperForm 
             selectDatas={selectDatas}
             isEdit={isEdit}
+            cb={(orgId,orgType) => this.setState({ orgId: orgId,orgType: orgType })}
+            callback={(value)=>this.setState({ staticType: value })}
+            onFocusSelect={this.onFocusSelect}
             addFunc={this.submit}
             orgId={this.state.orgId}
+            orgType={this.state.orgType}
             data={this.state.record}
             dirtyClick={this.state.dirtyClick}
             ref={(form) => this.addOrEditForm = form}

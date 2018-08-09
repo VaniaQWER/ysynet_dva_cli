@@ -40,6 +40,7 @@ export default {
       const data = yield call(usersService.login, payload);
       if(data.status){
         if(callback) callback(data);
+       
       }else{
         message.error(data.msg||'登陆获取用户信息失败');
       }

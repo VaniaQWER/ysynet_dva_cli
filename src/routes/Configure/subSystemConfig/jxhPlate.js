@@ -39,6 +39,7 @@ class JXHPlate extends PureComponent{
     record: {},
     options: [],
     subSystemOptions: [],
+    configCodeOptions: [],
     subSystemId: '',
     visible: false,
     loading: false
@@ -139,10 +140,19 @@ class JXHPlate extends PureComponent{
       }
     })
   }
+  create = () =>{
+    this.props.dispatch({
+      type: 'subSystemConfig/findConfigCode',
+      payload: { subSystemId: this.state.subSystemId },
+      callback: (data) =>{
+        this.setState({ configCodeOptions: data, visible: true })
+      }
+    })
+  }
   render(){
-    const { subSystemOptions ,subSystemId } = this.state;
-    const { visible, loading } = this.state;
+    const { subSystemOptions ,subSystemId, configCodeOptions, visible, loading } = this.state;
     const { getFieldDecorator } = this.props.form;
+    console.log(this.props,'props')
     const columns = [{
       title: '编号',
       dataIndex: 'No',
@@ -156,21 +166,11 @@ class JXHPlate extends PureComponent{
     },{
       title: '参数名称',
       dataIndex: 'configName',
-      width: 200,
-      render: (text, record, index) => {
-        return this.renderColumns(text, record, index,'configName',100)
-      }
+      width: 250,
     },{
       title: '代码',
       dataIndex: 'configCode',
-      width: 200
-    },{
-      title: '默认值',
-      dataIndex: 'configValueName',
-      width: 200,
-      render: (text, record, index) => {
-        return this.renderColumns(text, record, index,'configValue')
-      }
+      width: 250
     },{
       title: '备注',
       dataIndex: 'tfRemark',
@@ -223,6 +223,26 @@ class JXHPlate extends PureComponent{
                 )
               }
             </FormItem>
+            <FormItem {...formItemLayout} label={`代码`}>
+              {
+                getFieldDecorator(`configCode`,{
+                  initialValue: '',
+                  rules: [{ required: true,message: '请选择参数代码' }]
+                })(
+                  <Select
+                    showSearch
+                    filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
+                  >
+                    <Option key={-1} value=''>请选择</Option>
+                    {
+                      configCodeOptions.map((item,index)=>{
+                        return <Option key={index} value={item.value}>{ item.text }</Option>
+                      })
+                    }
+                  </Select>
+                )
+              }
+            </FormItem>
             <FormItem {...formItemLayout} label={`备注`}>
               {
                 getFieldDecorator(`tfRemark`,{
@@ -236,7 +256,7 @@ class JXHPlate extends PureComponent{
         </Modal>
         <Row className='ant-row-bottom'>
           <Col span={2}>
-            <Button type='primary' icon='plus' loading={loading} onClick={()=>this.setState({ visible: true })}>新建</Button>
+            <Button type='primary' icon='plus' loading={loading} onClick={ this.create }>新建</Button>
           </Col>
           <Col span={22} style={{ textAlign: 'right' }}>
             <Select 
@@ -256,7 +276,7 @@ class JXHPlate extends PureComponent{
               style={{ width: 248, marginLeft: 8 }}
               placeholder='请输入参数名称/参数分类'
               onSearch={(value)=>{
-                let { subSystemId } = this.props.subSystemConfig;
+                let { subSystemId } = this.state;
                 this.refs.table.fetch({ subSystemId,searchName: value })
               }}
             />
@@ -269,7 +289,7 @@ class JXHPlate extends PureComponent{
             ref='table'
             url={ysy.FINDSUBSYSTEMOCNFIGLIST}
             rowKey={'dsGuid'}
-            scroll={{ x:'100%' }}
+            scroll={{ x: '100%' }}
             query={{ subSystemId, searchName: this.state.searchName }}
             columns={columns}
             showHeader={true}

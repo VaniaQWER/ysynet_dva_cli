@@ -388,13 +388,15 @@ class DeptMgt extends PureComponent{
       type: 'deptMgt/genDeptMenus',
       payload: { deptGuid: record.deptGuid },
       callback: (data) =>{
-        let selected = [];
+        let selected = [],selectedRows = [];
         data.map((item,index)=>{
           if(item.isSelected === "1"){
             selected.push(item.id);
+            selectedRows.push(item);
             if(item.children.length){
               item.children.map((child,idx)=>{
                 selected.push(child.id);
+                selectedRows.push(child);
                 return null;
               });
             }
@@ -403,6 +405,7 @@ class DeptMgt extends PureComponent{
               item.children.map((child,idx)=>{
                 if(child.isSelected === "1"){
                   selected.push(child.id);
+                  selectedRows.push(child);
                 }
                 return null
               })
@@ -410,7 +413,7 @@ class DeptMgt extends PureComponent{
           }
           return null;
         });
-        this.setState({ menuVisible: true, systemMenuList: data, selected })
+        this.setState({ menuVisible: true, systemMenuList: data, selected, selectedRows })
       }
     })
   }
@@ -525,7 +528,7 @@ class DeptMgt extends PureComponent{
         title: '备注',
         dataIndex: 'tfRemark',
         key: 'tfRemark',
-        width: 200,
+        width: 300,
       }]
     const columns = [{
         title: '科室名称',
@@ -706,6 +709,8 @@ class DeptMgt extends PureComponent{
           <Table 
             rowKey='id'
             columns={menuColumns}
+            defaultExpandAllRows
+            hideDefaultSelections={true}
             dataSource={systemMenuList}
             scroll={{ x: '100%' }}
             pagination={false}
@@ -716,8 +721,69 @@ class DeptMgt extends PureComponent{
                 defaultChecked: record.isSelected === 1
               }),
               selectedRowKeys: selected,
-              onChange: (selectedRowKeys, selectedRows) => {
-                this.setState({selected: selectedRowKeys, selectedRows: selectedRows})
+              onSelect: (record, selected, onSelectedRows) => {
+                if(selected){
+                  if(record.children){
+                    // 点击勾选 父项
+                    let childSelected = [record.id],childSelectRows = [];
+                    record.children.map(item=> {
+                      childSelected.push(item.id);
+                      childSelectRows.push(item);
+                      return null
+                    });
+                    let totalSelectedRow = [...onSelectedRows,...childSelectRows ];
+                    let totalSelectd = [...this.state.selected,...childSelected ];
+                    let uniqueSelected = Array.from(new Set(totalSelectd)) ;
+                    let hash = {};
+                    totalSelectedRow = totalSelectedRow.reduce((item, next)=>{
+                      if(!hash[next.id]){
+                        hash[next.id] = true;
+                        item.push(next)
+                      }
+                      return item
+                    },[]);
+                    this.setState({ selected: uniqueSelected,selectedRows: totalSelectedRow })
+                  }else{
+                    // 点击勾选 子项
+                    let selected = [], selectedRows = [];
+                    let { parentId } = record;
+                    let subSelectedRow = onSelectedRows.filter(item => item.parentId === parentId)
+                    let newData = [...systemMenuList];
+                    let target = newData.filter(item => item.id === parentId)[0];
+                    let flag =  subSelectedRow.length === target.children.length;
+                    selected = [ ...this.state.selected,record.id ];
+                    selectedRows = [...this.state.selectedRows, record];
+                    if(flag){
+                      selected.push(target.id);
+                      delete target.record;
+                      selectedRows.push(target);
+                    }
+                    this.setState({ selected, selectedRows })
+                  }
+                }else{
+                  if(record && record.children){
+                    // 取消勾选 父项
+                    let newSelected = [], newSelectedRows = [];
+                    onSelectedRows.map((item,index)=>{
+                      record.children.map((list,idx)=>{
+                        if(record.id !== item.parentId){
+                          newSelected.push(item.id);
+                          newSelectedRows.push(item);
+                        }
+                        return null;
+                      });
+                      return null;
+                    });
+                    this.setState({ selected: newSelected,selectedRows: newSelectedRows })
+                  }else{
+                    // 取消勾选 子项
+                    let { parentId } = record;
+                    let newSelectedRows =  onSelectedRows.filter(item => item.id!== parentId);
+                    let newSelected = [];
+                    newSelectedRows.map(item=> newSelected.push(item.id));
+                    this.setState({ selected: newSelected, selectedRows: newSelectedRows })
+                  }
+                }
               }
             }}
           

@@ -153,18 +153,24 @@ class SiderMenu extends PureComponent{
         openKeys: []
       }
     }
+    const pathname = window.location.href.split('#')[1];
+    if(nextProps.users.menuList.length && nextProps.users.menuList[0].subMenus[0].path !== pathname){
+      return {
+        menuList: nextProps.users.menuList,
+      }
+    }
     return null;
   }
   componentDidUpdate(prevProps, prevState){
     const pathname = window.location.href.split('#')[1];
+    let keys = window.location.href.split('#')[1].split('/')[1];
     if(prevState.selectedKeys !== pathname){
-      this.setState({ selectedKeys: pathname })
+      this.setState({ selectedKeys: pathname,openKeys: [ keys+''] })
     }
-    
   }
   render(){
     const { history } = this.props;
-    const { menuList } = this.props.users;
+    const { menuList } = this.state;
     const { selectedKeys, openKeys } = this.state;
     return (
     <div>

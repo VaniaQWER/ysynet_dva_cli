@@ -88,17 +88,17 @@ export default {
       message.error(data.msg||'保存用户菜单权限失败')
     }
    },
-   //  非 临床科室子系统配置管理  保存
-   *saveStorageConfig({ payload,callback },{ call }){
-    const data = yield call(userSystemService.saveStorageConfig, payload);
-    if(data.status){
-      message.success('保存成功');
-      if(callback) callback()
-    }else{
-      message.error(data.msg||'保存配置失败')
-    }
-  },
-
+    //  非 临床科室子系统配置管理  保存
+    *saveStorageConfig({ payload,callback },{ call }){
+      const data = yield call(userSystemService.saveStorageConfig, payload);
+      if(data.status){
+        message.success('保存成功');
+        if(callback) callback()
+      }else{
+        message.error(data.msg||'保存配置失败')
+      }
+    },
+  
   },
   subscriptions: {
     

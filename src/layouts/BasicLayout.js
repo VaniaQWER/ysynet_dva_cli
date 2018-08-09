@@ -1,28 +1,25 @@
 import React, { PureComponent } from 'react';
 import { Route, Switch, Redirect } from 'dva/router';
-import { Layout, Icon, Row, Col, Tooltip  } from 'antd';
+import { Layout, Icon, Row, Col, Tooltip, Dropdown, Menu, Modal } from 'antd';
 import { connect } from 'dva';
 import Profile from '../components/profile'
 import SiderMenu from '../components/SiderMenu';
 import styles from './style.css';
+
 const { Header, Content, Sider } = Layout;
+let subSystemId = JSON.parse(localStorage.getItem('subSystemUser')).subSystemId;
 class BasicLayout extends PureComponent {
   state = {
     collapsed: false,
     menuName: '',
     subSystemList: [], // 子系统下拉框
-    dropDownToggle: false
   }
   toggle = () => {
     this.setState({
       collapsed: !this.state.collapsed,
     });
   }
-  SystemToggle = () =>{
-    this.setState({ dropDownToggle : !this.state.dropDownToggle})
-  }
   componentDidMount = () =>{
-    // console.log(this.props.users,'propsUsers');
     if(this.props.users.subSystemList.length){
       let subSystemList = this.props.users.subSystemList;
       this.setState({ subSystemList });
@@ -34,12 +31,73 @@ class BasicLayout extends PureComponent {
       })
     }
   }
+  handleClick = (e) =>{
+    console.log(e,'e')
+    let subSystemId = e.key;
+    let name = e.item.props.name;
+    let deptGuid = e.item.props.deptguid;
+    const that = this;
+    Modal.confirm({
+      title: '确认',
+      content: '是否确认切换子系统？',
+      onOk(){
+        let values = {
+          subSystemId,
+          deptGuid
+        }
+        that.props.dispatch({
+          type: 'users/findMenusByUser',
+          payload: values,
+          callback: (data) => {
+            let path = data[0].subMenus[0].path;
+            if(path === window.location.hash.split('#')[1]){
+              window.location.hash = `#${path}`;
+              window.location.reload();
+            }else{
+              that.props.history.push({ pathname: path });
+            }
+            let userInfo = JSON.parse(localStorage.getItem('subSystemUser'));
+            userInfo.deptGuid = deptGuid;
+            userInfo.subSystemId = subSystemId;
+            userInfo.subSystemName = name;
+            localStorage.setItem('subSystemUser',JSON.stringify(userInfo));
+            that.props.dispatch({
+              type: 'users/setUserInfo',
+              payload: userInfo
+            });
+            // 保存选中的子系统 subSystemId deptGuid 
+            that.props.dispatch({
+              type: 'users/subsystemInfo',
+              payload: { ...values, name }
+            })
+          }
+        })
+      },
+      onCancel(){
+
+      }
+    })
+  }
+  menu = (subSystemList) => (
+    <Menu 
+      selectable
+      onClick={this.handleClick}
+      defaultSelectedKeys={[subSystemId.toString()]}
+    >
+      {
+        subSystemList.map((item,index) =>{
+          return <Menu.Item key={item.subSystemId} name={item.name} deptguid={item.deptGuid}>{ item.name }</Menu.Item>
+        })
+      }
+    </Menu>
+  );
   render() {
     const { getRouteData } = this.props;
     let { userInfo, subSystem } = this.props.users;
     let subSystemName = userInfo.subSystemName ? userInfo.subSystemName: subSystem.name
     let {  userName } = userInfo;
-    const { menuName, subSystemList, dropDownToggle } = this.state;
+    const { menuName, subSystemList } = this.state;
+    
     return (
       <Layout>
         <Sider
@@ -65,25 +123,23 @@ class BasicLayout extends PureComponent {
           <Header className={`${styles.header}`} style={{ marginBottom: 3,padding: 0 }}>
             <Row>
               <Col span={4} style={{ paddingLeft: 16 }}>
-                { subSystemName }
-                  {
-                    subSystemList && subSystemList.length ?
-                    <Tooltip title='子系统切换'>
-                      <Icon type={ dropDownToggle ? "up-circle-o": "down-circle-o" } style={{ marginLeft: 8 }} onClick={this.SystemToggle}/>
-                    </Tooltip>
-                    :
-                    null
-                  }
+                <Dropdown overlay={this.menu(subSystemList)} trigger={['click']}>
+                  <Tooltip title='子系统切换' placement='right'>
+                    <span className="ant-dropdown-link">
+                      {subSystemName} <Icon type="down" style={{ marginLeft: 8 }}/>
+                    </span>
+                  </Tooltip>
+                </Dropdown>
               </Col>
               <Col span={20} style={{textAlign: 'right'}}>
                 <div className={styles.profile}>
-                  <div>
+                  {/* <div>
                     <Tooltip title="子系统切换">
                       <Icon type="sync" className={styles.icon} onClick={() => this.props.history.push({
                         pathname: '/subSystem'
                       })}/> 
                     </Tooltip>
-                  </div>
+                  </div> */}
                   <Profile userName={userName}/>
                 </div>
               </Col>

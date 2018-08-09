@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { Row, Col, Input, Button, Select,message } from 'antd';
+import { Row, Col, Input, Select,message } from 'antd';
 import RemoteTable from '../../../components/TableGrid';
 import { CommonData } from '../../../utils/utils';
 import jxh from '../../../api/jxh'
@@ -28,10 +28,12 @@ const EditableCell = ({ value, record, index, onEditChange, options, column, max
     }
   </div>
 );
+console.log(JSON.parse(localStorage.getItem('subSystemUser')).deptGuid);
+let deptGuid = JSON.parse(localStorage.getItem('subSystemUser')).deptGuid;
 class ConfigMgt extends PureComponent{
   state = {
     query: {
-      deptGuid: this.props.users.subSystem.deptGuid
+      deptGuid: this.props.users.subSystem.deptGuid || deptGuid
     },
     record: {},
     options: []
@@ -50,7 +52,7 @@ class ConfigMgt extends PureComponent{
       }
       console.log(values,'values');
       this.props.dispatch({
-        type: 'clinicalSystem/saveDeptConfig',
+        type: 'userSystem/saveDeptConfig',
         payload: values,
         callback: () => {
           this.setState({ record: {...record, editable: false,index } })
@@ -94,10 +96,11 @@ class ConfigMgt extends PureComponent{
     );
   }
   render(){
+    console.log(this.props.users,'users')
     const columns = [{
       title: '编号',
       dataIndex: 'No',
-      width: 90,
+      width: 70,
       render: (text,record,index)=>{
         return index + 1;
       }
@@ -107,24 +110,28 @@ class ConfigMgt extends PureComponent{
     },{
       title: '参数名称',
       dataIndex: 'configName',
-      width: 200,
+      width: 250,
       render: (text, record, index) => {
         return this.renderColumns(text, record, index,'configName',100)
       }
     },{
       title: '代码',
       dataIndex: 'configCode',
+      width: 180
     },{
       title: '默认值',
       dataIndex: 'configValue',
-      width: 200,
+      width: 180,
       render: (text, record, index) => {
+        if(record.configValue && !this.state.record.editable){
+          return record.configValueName
+        }
         return this.renderColumns(text, record, index,'configValue')
       }
     },{
       title: '备注',
       dataIndex: 'tfRemark',
-      width: 250,
+      width: 230,
       render: (text, record, index) => {
         return this.renderColumns(text, record, index,'tfRemark',250)
       }
@@ -143,14 +150,11 @@ class ConfigMgt extends PureComponent{
     return (
       <div>
         <Row className='ant-row-bottom'>
-          <Col span={4}>
-            <Button type='primary' onClick={()=>this.refs.table.fetch()}>更新</Button>
-          </Col>
-          <Col span={20} style={{ textAlign: 'right' }}>
+          <Col>
             <Search 
               style={{ width: 256 }}
               placeholder='请输入参数名称/参数分类'
-              onSearch={value => this.refs.table.fetch({ searchName: value }) }
+              onSearch={value => this.refs.table.fetch({ deptGuid: this.props.users.subSystem.deptGuid || deptGuid, searchName: value }) }
             />
           </Col>
         </Row>

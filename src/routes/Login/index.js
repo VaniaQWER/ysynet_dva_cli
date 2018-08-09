@@ -39,7 +39,7 @@ class Login extends PureComponent{
           payload: userInfo,
           callback: (data) =>{
             this.setState({ loading: false });
-          if(!data.result.loginResult){
+          if(!data.result.userInfo){
             message.error(data.result.loginResult)
           }else{
             this.props.dispatch({

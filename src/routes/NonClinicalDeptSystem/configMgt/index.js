@@ -1,37 +1,42 @@
 import React, { PureComponent } from 'react';
-import { Row, Col, Input, Button, Select,message } from 'antd';
+import { Row, Col, Input, Select,message } from 'antd';
 import RemoteTable from '../../../components/TableGrid';
 import { CommonData } from '../../../utils/utils';
 import jxh from '../../../api/jxh'
 import { connect } from 'dva';
 const { Search } = Input;
 const { Option } = Select;
-const EditableCell = ({ value, record, index, onEditChange, options, column, max }) => (
-  <div>
-    {
-      (record.editable && record.index === index) ?
-      column === 'configValue' ?
-      <Select
-        onSelect={(value)=> onEditChange(value,record,index,column)} 
-        defaultValue={record.configValue}
-        style={{ width: '100%' }}>
-        {
-          options.map((item,index)=>{
-            return <Option key={index} value={item.TF_CLO_CODE}>{item.TF_CLO_NAME}</Option>
-          })
-        }
-      </Select>
-      :
-      <Input style={{ margin: '-2px 0' }} defaultValue={value} onChange={e => onEditChange(e.target.value, record, index, column, max)} />
-      : 
-      value
-    }
-  </div>
-);
+const EditableCell = ({ value, record, index, onEditChange, options, column, max }) => {
+  return (
+    <div>
+      {
+        (record.editable && record.index === index) ?
+        column === 'configValue' ?
+        <Select
+          onSelect={(value)=> onEditChange(value,record,index,column)} 
+          defaultValue={record.configValue}
+          style={{ width: '100%' }}>
+          {
+            options.map((item,index)=>{
+              return <Option key={index} value={item.TF_CLO_CODE}>{item.TF_CLO_NAME}</Option>
+            })
+          }
+        </Select>
+        :
+        <Input style={{ margin: '-2px 0' }} defaultValue={value} onChange={e => onEditChange(e.target.value, record, index, column, max)} />
+        : 
+        value
+      }
+    </div>
+  );
+}
 class NonClinicalDeptSystem extends PureComponent{
   state = {
-    query: {},
-    record: {}
+    query: {
+      
+    },
+    record: {},
+    options: []
   }
   edit = (record,stateRecord,index)=>{
     if(stateRecord.editable){
@@ -41,9 +46,10 @@ class NonClinicalDeptSystem extends PureComponent{
       values.configValue = stateRecord.configValue;
       values.configType = stateRecord.configType;
       values.tfRemark = stateRecord.tfRemark;
+      values.configGuid = stateRecord.configGuid;
       console.log(values,'values');
       this.props.dispatch({
-        type: 'subSystemConfig/saveStorageConfig',
+        type: 'userSystem/saveStorageConfig',
         payload: values,
         callback: () =>{ 
           this.setState({ record: {...record, editable: false,index } })
@@ -54,10 +60,9 @@ class NonClinicalDeptSystem extends PureComponent{
       console.log('编辑')
       if(record.configCode){
         CommonData(record.configCode, (data) => {
-          this.setState({ options: data })
+          this.setState({ options: data, record: {...record, editable: true, index } });
         });
       }
-      this.setState({ record: {...record, editable: true, index } })
     }
   }
   onCellChange = (value,record,index,column,max) => {
@@ -112,6 +117,9 @@ class NonClinicalDeptSystem extends PureComponent{
       dataIndex: 'configValue',
       width: 200,
       render: (text, record, index) => {
+        if(record.configValue && !this.state.record.editable){
+          return record.configValueName
+        }
         return this.renderColumns(text, record, index,'configValue')
       }
     },{
@@ -136,10 +144,7 @@ class NonClinicalDeptSystem extends PureComponent{
     return (
       <div>
         <Row className='ant-row-bottom'>
-          <Col span={4}>
-            <Button type='primary' onClick={()=>this.refs.table.fetch()}>更新</Button>
-          </Col>
-          <Col span={20} style={{ textAlign: 'right' }}>
+          <Col>
             <Search 
               style={{ width: 256 }}
               placeholder='请输入参数名称/参数分类'
@@ -150,7 +155,7 @@ class NonClinicalDeptSystem extends PureComponent{
         <RemoteTable 
           ref='table'
           url={jxh.FINDSTORAGECONFIGLIST}
-          rowKey={'dsGuid'}
+          rowKey={'templateScGuid'}
           scroll={{ x:'100%' }}
           query={query}
           columns={columns}

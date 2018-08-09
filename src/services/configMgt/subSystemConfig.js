@@ -8,6 +8,14 @@ export function findSubSystemSelector(options){
   })
 }
 
+export function findConfigCode(options){
+  return request(`${_local}/Configure/findConfigCode`,{ //查询某个子系统下的参数 code列表
+    methods: 'POST',
+    type: 'formData',
+    body: options
+  })
+}
+
 export function findSubSystemConfigList(options){
   return request(`${_local}/Configure/findSubSystemConfigList`,{ //查询子系统下的配置列表
     methods: 'POST',

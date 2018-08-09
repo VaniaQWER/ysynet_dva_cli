@@ -52,11 +52,12 @@ export default {
       }
     },
     // 分类管理 查询机构信息
-    *orgStaticInfo({ payload },{ put, call }){
+    *orgStaticInfo({ payload, callback },{ call }){
       const data = yield call(dictionaryService.orgStaticInfo, payload);
-      if(data.status){
-        yield put({ type: 'orgInfo',payload: data.result });
+      if(!data.status){
+       return  message.error(data.msg||'获取上级机构失败')
       }
+      if(callback) callback(data.result)
     },
     // 新增数据字典
     *insertStaticInfo({ payload,callback },{ call, put }){

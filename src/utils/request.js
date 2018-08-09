@@ -1,4 +1,5 @@
-import { notification } from 'antd';
+import { notification, message } from 'antd';
+import { hashHistory } from 'dva/router';
 import querystring from 'querystring';
 import fetch from 'dva/fetch';
 
@@ -48,7 +49,25 @@ export default function request(url, options) {
   }
   return fetch(url, newOptions)
     .then(response=> checkStatus(response))
-    .then(response => response.json())
+    .then(response =>{
+      switch (response.status){
+        case 996:
+          hashHistory.push({pathname: '/login'});
+          return message.warn('会话失效，请重新登录');
+        case 997:
+          hashHistory.push({pathname: '/login'});
+          return message.warn('非法访问，请重新登录');
+        case 998:
+          hashHistory.push({pathname: '/login'});
+          return message.warn('会话失效，请重新登录');
+        case 999:
+          hashHistory.push({pathname: '/login'});
+          return message.warn('登录失效，请重新登录');
+        default:
+          return response.json();
+      }
+    })
+    // .then(response => response.json())
     .catch((error) => {
       if (error.code) {
         notification.error({

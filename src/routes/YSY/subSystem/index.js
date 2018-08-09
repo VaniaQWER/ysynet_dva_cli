@@ -16,7 +16,7 @@ const formItemLayout = {
 class NewAddForm extends PureComponent{
   render(){
     const { getFieldDecorator } = this.props.form;
-    const { isEdit, subSystemId } = this.props;
+    const { isEdit, isSelected } = this.props;
     return (
       <Form>
           <FormItem {...formItemLayout} label={`子系统名称`}>
@@ -30,7 +30,7 @@ class NewAddForm extends PureComponent{
             }
           </FormItem>
           {
-            !subSystemId &&
+            !isSelected || isEdit ?
             <FormItem {...formItemLayout} label={`关联标识`}>
               {
                 getFieldDecorator(`subSystemFlag`,{
@@ -46,9 +46,11 @@ class NewAddForm extends PureComponent{
                 )
               }
             </FormItem>
+            :
+            null
           }
           {
-            !subSystemId &&
+            !isSelected || isEdit ?
             <FormItem {...formItemLayout} label={`是否末级标识`}>
               {
                 getFieldDecorator(`lastFlag`,{
@@ -62,6 +64,8 @@ class NewAddForm extends PureComponent{
                 )
               }
             </FormItem>
+            :
+            null
           }
         </Form>
     )
@@ -258,7 +262,7 @@ class SubSystem extends PureComponent{
     //e.item.props.subsystemname  子集 
     let system = {};
     system.relFlag = e.item.props.relflag;
-    let addsystemDisable = e.item.props.subsystemname ? true: false; // 新建子系统判断 是否可建
+    let addsystemDisable = e.item.props.subsystemname || e.item.props.lastflag === '01' ? true: false; // 新建子系统判断 是否可建
     let deleteBtndisable = e.item.props.relflag === '01'? true: false; // 选中子系统是否 可以删除
     let subSystemId = e.item.props.subsystemname ? e.item.props.subsystemid: e.key;
     let selectedKeys = e.key === this.state.selectedKeys[0] ? []: [e.key];
@@ -373,6 +377,7 @@ class SubSystem extends PureComponent{
         <WrapAddForm 
           ref={(form) => this.form_system = form}
           subSystemId={this.state.subSystemId}
+          isSelected={this.state.selectedKeys.length ? true : false}
           data={editData}
           isEdit={isEdit}/>
       </Modal>
@@ -403,7 +408,7 @@ class SubSystem extends PureComponent{
                   if(this.form_system){
                     this.form_system.resetFields();
                   }
-                  this.setState({ newAddVisible: true })}
+                  this.setState({ newAddVisible: true,title: '新建',isEdit: false })}
                 }
                   >
                   新建子系统
@@ -438,7 +443,13 @@ class SubSystem extends PureComponent{
                   style={{ width: '100%' }}
                   mode="inline"
                 >
-                  <Menu.Item subsystemid={item.subSystemId} key={item.subSystemId} subsystemflag={item.subSystemFlag}  relflag={item.relFlag}>
+                  <Menu.Item 
+                    subsystemid={item.subSystemId} 
+                    key={item.subSystemId} 
+                    subsystemflag={item.subSystemFlag}  
+                    relflag={item.relFlag}
+                    lastflag={item.lastFlag}
+                  >
                     <span style={{ fontWeight: 'bold' }}> { item.subSystemName } <Icon type="edit" onClick={this.IconEdit.bind(this,item)} className='menuNode_tool'/> </span>
                   </Menu.Item>
                   {

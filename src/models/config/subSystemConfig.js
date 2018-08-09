@@ -37,6 +37,13 @@ export default {
       }
       if (callback) callback()
     },
+    *findConfigCode({ payload, callback },{ call }){
+      const data = yield call(configService.findConfigCode, payload );
+      if(data.length === 0){
+        return message.warning('该子系统下暂无配置项')
+      }
+      if(callback) callback(data);
+    }
   },
   subscriptions: {
     

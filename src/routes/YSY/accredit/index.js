@@ -103,9 +103,9 @@ class Accredit extends PureComponent{
     return (
       <div className='ysynet-siderMenu-noborder'>
         <div style={{ background: '#fff',display: 'flex' }}>
-          <div style={{ background: '#fff',borderRight: 'dashed 1px #ccc',padding: '0 10px' }}>
+          <div style={{ background: '#fff',borderRight: 'dashed 1px #ccc',width: 256 }}>
             <Search 
-              style={{ marginBottom: 16 }}
+              style={{ marginBottom: 16,width: 232 }}
               placeholder='部署/机构名称'
               onSearch={this.onSearch}
             />
@@ -126,7 +126,7 @@ class Accredit extends PureComponent{
                       onClick={this.handleClick}
                     >
                       <Menu.Item deployid={item.deployId} key={item.orgId}>
-                        <span style={{ fontWeight: 'bold' }}> { item.deployName } </span>
+                        <span style={{ fontWeight: 'bold' }} title={item.deployName}> { item.deployName } </span>
                       </Menu.Item>
                       {
                         item.orgList.length
@@ -151,9 +151,9 @@ class Accredit extends PureComponent{
             <div>
               <h3>部署信息</h3>
                 <Row style={{ padding: '0 20px' }}>
-                  <Col className="ant-col-8">
+                  <Col className="ant-col-12">
                     <div className="ant-row">
-                      <div className="ant-col-6 ant-form-item-label-left">
+                      <div className="ant-col-5 ant-form-item-label-left">
                         <label>部署名称</label>
                       </div>
                       <div className="ant-col-15">
@@ -163,21 +163,21 @@ class Accredit extends PureComponent{
                       </div>
                     </div>
                   </Col>
-                  <Col className="ant-col-8">
+                  <Col className="ant-col-12">
                     <div className="ant-row">
-                      <div className="ant-col-6 ant-form-item-label-left">
+                      <div className="ant-col-5 ant-form-item-label-left">
                         <label>授权码</label>
                       </div>
-                      <div className="ant-col-15">
+                      <div className="ant-col-18">
                         <div className="ant-form-item-control">
                           { baseData.keyCode ? baseData.keyCode: ''  }
                         </div>
                       </div>
                     </div>
                   </Col>
-                  <Col className="ant-col-8">
+                  <Col className="ant-col-12">
                     <div className="ant-row">
-                      <div className="ant-col-8 ant-form-item-label-left">
+                      <div className="ant-col-5 ant-form-item-label-left">
                         <label>授权有效期</label>
                       </div>
                       <div className="ant-col-15">
@@ -187,9 +187,9 @@ class Accredit extends PureComponent{
                       </div>
                     </div>
                   </Col>
-                  <Col className="ant-col-8">
+                  <Col className="ant-col-12">
                     <div className="ant-row">
-                      <div className="ant-col-8 ant-form-item-label-left">
+                      <div className="ant-col-6 ant-form-item-label-left">
                         <label>最后编辑时间</label>
                       </div>
                       <div className="ant-col-15">
