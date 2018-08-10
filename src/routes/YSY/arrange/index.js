@@ -40,7 +40,7 @@ class ModalForm extends PureComponent{
           :
           <FormItem {...formItemLayout} label={`部署名称`}>
             {
-              <FetchSelect url={`/orgInfoController/findOrgs`} query={{flag: '00'}} cb={(orgId)=>this.props.cb({ orgId })}/>
+              <FetchSelect url={`${ysy.ORG_LIST}`} query={{flag: '00'}} cb={(orgId)=>this.props.cb({ orgId })}/>
             }
           </FormItem>
         }
@@ -191,22 +191,25 @@ class Arrange extends PureComponent{
   addOrg = () =>{
     let { rightSelectedRows, leftDataSource, rightDataSource } = this.state;
     let newLeftData = [...leftDataSource, ...rightSelectedRows];
+    let newLeftSelected = [], newLeftSelectedRows = [];
+    rightSelectedRows.map(item =>{
+      newLeftSelected.push(item.orgId);
+      newLeftSelectedRows.push(item);
+      return null
+    })
     let newRightData = [];
     rightDataSource.map(item => {
-      let flag = true;
       rightSelectedRows.map((list,idx)=>{
-        if(item.orgId === list.orgId){
-          flag = false;
+        if(item.orgId !== list.orgId){
+          newRightData.push(item);
         }
         return null;
       });
-      if(flag){
-        newRightData.push(item)
-      }
       return null;
     });
     console.log(newRightData,'newRightData')
-    this.setState({ leftDataSource: newLeftData,leftDataCache: newLeftData, rightDataSource: newRightData,
+    this.setState({ leftDataSource: newLeftData,leftDataCache: newLeftData, leftSelected: newLeftSelected,
+      leftSelectedRows: newLeftSelectedRows, rightDataSource: newRightData,
       rightSelected: [], rightSelectedRows: [],rightCheckAll: false 
     });
   }

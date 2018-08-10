@@ -382,6 +382,7 @@ class UserMgt extends PureComponent{
           <Table 
             columns={powerColumns}
             dataSource={powerData}
+            defaultExpandAllRows={true}
             pagination={false}
             loading={loading}
             rowKey='id'

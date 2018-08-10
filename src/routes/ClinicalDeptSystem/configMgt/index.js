@@ -123,7 +123,7 @@ class ConfigMgt extends PureComponent{
       dataIndex: 'configValue',
       width: 180,
       render: (text, record, index) => {
-        if(record.configValue && !this.state.record.editable){
+        if((record.configValue && !this.state.record.editable) || index !== this.state.record.index){
           return record.configValueName
         }
         return this.renderColumns(text, record, index,'configValue')

@@ -66,7 +66,7 @@ class UserMgt extends PureComponent{
     this.props.dispatch({
       type: 'userSystem/resetPwd',
       payload: { userId: record.userId },
-      callback: () => this.refs.table.fetch()
+      callback: () => this.refs.table.fetch(this.state.query)
     })
   }
   edit = (record) =>{
@@ -89,7 +89,7 @@ class UserMgt extends PureComponent{
         payload: values,
         callback: () =>{
           this.setState({ visible: false,dirtyClick: false });
-          this.refs.table.fetch();
+          this.refs.table.fetch(this.state.query);
         }
       })
     })
@@ -167,11 +167,12 @@ class UserMgt extends PureComponent{
       type: 'userSystem/updateUserMenus',
       payload: postData,
       callback: ()=>{
-        this.setState({ powerVisible: false, buttonLoading: false })
+        this.setState({ powerVisible: false, buttonLoading: false });
+        this.refs.table.fetch(this.state.query);
       }
     })
   }
-  handleSubmit = (e) =>{
+  handleOk = (e) =>{
     e.preventDefault();
     this.props.form.validateFields((err,values)=>{
       this.setState({ dirtyClick: true })
@@ -185,7 +186,7 @@ class UserMgt extends PureComponent{
         payload: values,
         callback: () =>{
           this.setState({ visible: false,dirtyClick: false });
-          this.refs.table.fetch();
+          this.refs.table.fetch(this.state.query);
         }
       })
     })
@@ -331,7 +332,7 @@ class UserMgt extends PureComponent{
           <Button key="back" onClick={() => this.setState({ visible: false })}>取消</Button>
         ]}
         >
-          <Form onSubmit={this.handleSubmit}>
+          <Form>
             <Row>
               <Col span={12}>
                 <FormItem {...singleFormItemLayout} label={`账号`}>
@@ -445,6 +446,7 @@ class UserMgt extends PureComponent{
           columns={powerColumns}
           dataSource={powerData}
           pagination={false}
+          defaultExpandAllRows={true}
           loading={loading}
           bordered
           rowKey='id'
@@ -452,8 +454,69 @@ class UserMgt extends PureComponent{
           size='small'
           rowSelection={{
             selectedRowKeys: this.state.selected,
-            onChange: (selectedRowKeys, selectedRows) => {
-              this.setState({selected: selectedRowKeys, selectedRows: selectedRows})
+            onSelect: (record, selected, onSelectedRows,e) => {
+              if(selected){
+                if(record.children){
+                  // 点击勾选 父项
+                  let childSelected = [record.id],childSelectRows = [];
+                  record.children.map(item=> {
+                    childSelected.push(item.id);
+                    childSelectRows.push(item);
+                    return null
+                  });
+                  let totalSelectedRow = [...onSelectedRows,...childSelectRows ];
+                  let totalSelectd = [...this.state.selected,...childSelected ];
+                  let uniqueSelected = Array.from(new Set(totalSelectd)) ;
+                  let hash = {};
+                  totalSelectedRow = totalSelectedRow.reduce((item, next)=>{
+                    if(!hash[next.id]){
+                      hash[next.id] = true;
+                      item.push(next)
+                    }
+                    return item
+                  },[]);
+                  this.setState({ selected: uniqueSelected,selectedRows: totalSelectedRow })
+                }else{
+                  // 点击勾选 子项
+                  let selected = [], selectedRows = [];
+                  let { parentId } = record;
+                  let subSelectedRow = onSelectedRows.filter(item => item.parentId === parentId)
+                  let newData = [...powerData];
+                  let target = newData.filter(item => item.id === parentId)[0];
+                  let flag =  subSelectedRow.length === target.children.length;
+                  selected = [ ...this.state.selected,record.id ];
+                  selectedRows = [...this.state.selectedRows, record];
+                  if(flag){
+                    selected.push(target.id);
+                    delete target.record;
+                    selectedRows.push(target);
+                  }
+                  this.setState({ selected, selectedRows })
+                }
+              }else{
+                if(record && record.children){
+                  // 取消勾选 父项
+                  let newSelected = [], newSelectedRows = [];
+                  onSelectedRows.map((item,index)=>{
+                    record.children.map((list,idx)=>{
+                      if(record.id !== item.parentId){
+                        newSelected.push(item.id);
+                        newSelectedRows.push(item);
+                      }
+                      return null;
+                    });
+                    return null;
+                  });
+                  this.setState({ selected: newSelected,selectedRows: newSelectedRows })
+                }else{
+                  // 取消勾选 子项
+                  let { parentId } = record;
+                  let newSelectedRows =  onSelectedRows.filter(item => item.id!== parentId);
+                  let newSelected = [];
+                  newSelectedRows.map(item=> newSelected.push(item.id));
+                  this.setState({ selected: newSelected, selectedRows: newSelectedRows })
+                }
+              }
             }
           }}
         />
