@@ -15,18 +15,18 @@ class RemoteTable extends Component {
       searchParams: {}
     }
   }
-  componentDidUpdate = (prevProps, prevState) =>{
+  /* componentDidUpdate = (prevProps, prevState) =>{
     if ((prevProps.url !== this.props.url) || 
       (typeof prevProps.query === 'string' ? prevProps.query !== this.props.query : !objCompare(prevProps.query, this.props.query))) {
         this.fetch(this.props.query, this.props.url)
     }
-  }
-  /* componentWillReceiveProps = (nextProps) => {
+  } */
+  componentWillReceiveProps = (nextProps) => {
     if ((nextProps.url !== this.props.url) || 
       (typeof nextProps.query === 'string' ? nextProps.query !== this.props.query : !objCompare(nextProps.query, this.props.query))) {
         this.fetch(nextProps.query, nextProps.url)
     }
-  } */
+  }
   handleTableChange = (pagination, filters, sorter) => {
     const pager = this.state.pagination;
     pager.pageSize = pagination.pageSize;

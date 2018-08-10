@@ -4,19 +4,33 @@ import { connect } from 'dva';
 import sha1 from 'sha1';
 import md5 from 'md5';
 import styles from './style.css';
+import { _local }  from '../../api/local'
 const FormItem = Form.Item;
 
 class Login extends PureComponent{
   state = {
     loading: false,
-    orgName: ''
+    orgName: '',
+    code: ''
   }
   componentDidMount = () =>{
     this.props.dispatch({
       type: 'users/getOrgName',
       payload: {},
       callback: (data) => this.setState({ orgName: data  })
+    });
+    this.codeChange();
+  }
+  codeChange = () => {
+    this.setState({
+      code: `${_local}/checkCode.jpg?date` + new Date()
     })
+    this.codeReset();
+  }
+  codeReset = () => {
+    this.props.form.setFieldsValue({
+      code: '',
+    });
   }
   handleSubmit = (e) =>{
     e.preventDefault();
@@ -93,7 +107,7 @@ class Login extends PureComponent{
   }
   render(){
     const { getFieldDecorator } = this.props.form;
-    // const { orgName } = this.state;
+    const { orgName } = this.state;
     const wrapperLayout = {
       wrapperCol:{ span: 15, offset: 5 }
     }
@@ -102,8 +116,10 @@ class Login extends PureComponent{
          <div className={styles['ysy-Login-bg']} style={{ width: '62%' }}></div>
          <div className={styles['ysy-Login-form']} style={{ width: '38%' }}>
             <div className={styles['ysy-Login-form-top']}>
-              {/* <span className={styles['ysy-orgName']}>{orgName}</span> */}
-              <span className={styles['ysy-lgo']}></span>
+              <div className='ant-col-15 ant-col-offset-5' style={{ textAlign: 'center' }}>
+                <span className={styles['ysy-orgName']}>{orgName}</span>
+                {/* <span className={styles['ysy-lgo']}></span> */}
+              </div>
               {/* <span className={styles['ysy-login-logo']}></span> */}
             </div>
             <Form onSubmit={this.handleSubmit}>
@@ -120,6 +136,39 @@ class Login extends PureComponent{
                 })(
                   <Input addonBefore={<Icon type="lock" />} type="password" placeholder="密码" />
                 )}
+              </FormItem>
+              <FormItem {...wrapperLayout}>
+                {getFieldDecorator('code', {
+                  rules: [{validator: (rule, value, cb) => {
+                    if(typeof value !== 'undefined' && value.length === 5) {
+                      fetch(`${_local}/login/check`,{
+                        method:'post',
+                        credentials: 'include',
+                        mode: 'cors',
+                        headers: {
+                          'Content-Type': 'application/x-www-form-urlencoded', 
+                        },
+                        body: 'code='+value
+                      })
+                      .then(res => res.json())
+                      .then(json => {
+                        if(json.result === 'success'){
+                          cb();
+                        }else{
+                          cb('验证码不正确');
+                          setTimeout(()=>{
+                            this.codeChange();
+                          },1000);
+                        }
+                      })
+                    } else {
+                      cb('验证码不正确');
+                    }
+                  }}],
+                })(
+                  <Input style={{width: '50%'}}  placeholder="验证码" />
+                )}
+                <img alt='介里是验证码' title='点击切换验证码' style={{ float:'right' }} src={this.state.code} onClick={this.codeChange}/> 
               </FormItem>
               <FormItem  {...wrapperLayout}>
                 {getFieldDecorator('remember', {

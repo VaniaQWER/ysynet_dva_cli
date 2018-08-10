@@ -82,7 +82,7 @@ class BasicLayout extends PureComponent {
     <Menu 
       selectable
       onClick={this.handleClick}
-      defaultSelectedKeys={[subSystemId.toString()]}
+      defaultSelectedKeys={[subSystemId?subSystemId+"":""]}
     >
       {
         subSystemList.map((item,index) =>{
@@ -123,13 +123,16 @@ class BasicLayout extends PureComponent {
           <Header className={`${styles.header}`} style={{ marginBottom: 3,padding: 0 }}>
             <Row>
               <Col span={4} style={{ paddingLeft: 16 }}>
-                <Dropdown overlay={this.menu(subSystemList)} trigger={['click']}>
-                  <Tooltip title='子系统切换' placement='right'>
-                    <span className="ant-dropdown-link">
-                      {subSystemName} <Icon type="down" style={{ marginLeft: 8 }}/>
-                    </span>
-                  </Tooltip>
-                </Dropdown>
+                {
+                  subSystemName &&
+                  <Dropdown overlay={this.menu(subSystemList)} trigger={['click']}>
+                    <Tooltip title='子系统切换' placement='right'>
+                      <span className="ant-dropdown-link">
+                        {subSystemName} <Icon type="down" style={{ marginLeft: 8 }}/>
+                      </span>
+                    </Tooltip>
+                  </Dropdown>
+                }
               </Col>
               <Col span={20} style={{textAlign: 'right'}}>
                 <div className={styles.profile}>

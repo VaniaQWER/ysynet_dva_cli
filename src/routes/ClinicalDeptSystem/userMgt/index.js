@@ -260,7 +260,7 @@ class UserMgt extends PureComponent{
             <Col span={9}>
               <label style={{ padding: '0 5px' }}>状态: </label>
                 <Select 
-                  onChange={(value) => this.onChange(value,'fstate') }
+                  onChange={(value) => this.genData(value,'fstate') }
                   defaultValue={'01'}
                   style={{ width: 200 }}
                 >

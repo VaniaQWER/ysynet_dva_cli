@@ -190,10 +190,10 @@ class SubSystem extends PureComponent{
       // 新建  isEdit  false   
     this.form_system.validateFields((err,values)=>{
       if(!err){
+        values.subSystemFlag = values.subSystemFlag.length > 1 ? '02':values.subSystemFlag[0];
         if(this.state.isEdit){
           // 编辑
           values.subSystemId = this.state.editData.subSystemId;
-          values.subSystemFlag = values.subSystemFlag.length > 1 ? '02':values.subSystemFlag[0];
           delete values.subSystemName;
           console.log(values,'values');
           this.setState({ subSystemLoading: true });

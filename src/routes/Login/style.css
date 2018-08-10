@@ -17,13 +17,11 @@
 }
 .ysy-Login-form-top{
   display: flex;
-  justify-content: center;
   padding-top: 170px;
   padding-bottom: 36px;
 }
 .ysy-orgName{
   font-size: 32px;
-  letter-spacing: 3px;
   color: #919296;
 }
 .ysy-lgo{
