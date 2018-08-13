@@ -250,7 +250,7 @@ class DetailsPicking extends PureComponent{
             rowKey={'id'}
             style={{marginTop: 24}}
           />
-          <Modal visible={visible} width={980} onOk={()=>this.modalSubmit()} onCancel={()=>this.setState({visible:false})}>
+          <Modal visible={visible} centered={true} width={980} onOk={()=>this.modalSubmit()} onCancel={()=>this.setState({visible:false})}>
             <Row>
               <Col span={8}>
                   <div className="ant-form-item-label ant-col-xs-24 ant-col-sm-5">

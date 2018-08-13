@@ -485,6 +485,7 @@ class NewInventory extends PureComponent {
         <Modal
           visible={this.state.visible}
           title="新增盘点"
+          centered={true}
           onOk={this.handleOk}
           onCancel={() => this.setState({ visible: false })}
           footer={[

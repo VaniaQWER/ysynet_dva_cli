@@ -376,6 +376,7 @@ class SettlementMgt extends PureComponent {
                     }}>新建结算</Button>
                     <Modal
                         title="单据信息"
+                        centered={true}
                         visible={this.state.showNewSummary}
                         onOk={this.handleOk}
                         onCancel={this.handleCancel}

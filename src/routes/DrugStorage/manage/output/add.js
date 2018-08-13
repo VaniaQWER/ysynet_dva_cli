@@ -216,7 +216,7 @@ class AddOutput extends PureComponent{
         </Affix>
 
         {/*选择产品-弹窗*/}
-        <Modal title='选择页面' visible={visible} width={980}
+        <Modal title='选择页面' visible={visible} width={980} centered={true}
           onOk={()=>this.addToMain()}
           onCancel={()=>this.setState({visible:false,selectedRowKey:[]})}>
           <Row>

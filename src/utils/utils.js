@@ -86,3 +86,15 @@ export const getMenuData  = (key, menuList) => {
     return [];
   }
 }
+
+export const unique = (data,key) =>{
+  let hash = {};
+  data = data.reduce((item, next)=>{
+    if(!hash[next[key]]){
+      hash[next[key]] = true;
+      item.push(next)
+    }
+    return item
+  },[]);
+  return data
+}

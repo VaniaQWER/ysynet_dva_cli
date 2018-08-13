@@ -229,6 +229,7 @@ class Accredit extends PureComponent{
                 </Spin>
                 <Modal
                   visible={visible}
+                  centered={true}
                   onCancel={()=>this.setState({ visible:false })}
                   title='编辑'
                   width={726}

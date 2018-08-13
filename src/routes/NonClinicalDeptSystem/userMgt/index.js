@@ -280,6 +280,7 @@ class UserMgt extends PureComponent{
         title={title}
         visible={visible}
         width={460}
+        centered={true}
         onCancel={()=>this.setState({ visible: false })}
         footer={null}
       >
@@ -363,6 +364,7 @@ class UserMgt extends PureComponent{
       <Modal
         title='用户权限'
         width={1100}
+        centered={true}
         visible={powerVisible}
         onCancel={()=>this.setState({ powerVisible: false })}
         footer={[

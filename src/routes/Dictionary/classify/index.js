@@ -374,6 +374,7 @@ class ClassifyMgt extends PureComponent{
         </Modal>
         <Modal
           title='克隆'
+          centered={true}
           visible={cloneVisible}
           width={460}
           onCancel={()=>this.setState({ cloneVisible: false })}

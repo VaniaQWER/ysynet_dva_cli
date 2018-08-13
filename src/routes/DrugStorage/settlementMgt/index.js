@@ -370,6 +370,7 @@ class SettlementMgt extends PureComponent {
                     <Button type="primary" onClick={this.showNewSummary}>新建汇总</Button>
                     <Modal
                         title="单据信息"
+                        centered={true}
                         visible={this.state.showNewSummary}
                         onOk={this.handleOk}
                         onCancel={this.handleCancel}

@@ -369,6 +369,7 @@ class SubSystem extends PureComponent{
     <div className='subSystem ysynet-siderMenu-noborder'>
       <Modal 
         title={title}
+        centered={true}
         visible={newAddVisible}
         onCancel={()=>this.setState({ newAddVisible: false })}
         footer={[
@@ -387,6 +388,7 @@ class SubSystem extends PureComponent{
       </Modal>
       <Modal
         title='添加菜单'
+        centered={true}
         visible={addMenuVisible}
         onCancel={()=>this.setState({ addMenuVisible: false })}
         footer={[

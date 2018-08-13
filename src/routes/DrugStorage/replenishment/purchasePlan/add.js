@@ -108,6 +108,7 @@ class NewAdd extends PureComponent{
         </div>
         <Modal
           title={'添加产品'}
+          centered={true}
           visible={visible}
           width={1100}
           onCancel={()=>this.setState({ visible: false })}

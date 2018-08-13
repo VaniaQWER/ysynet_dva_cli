@@ -201,6 +201,7 @@ class User extends PureComponent{
             </div>
             <Modal
               title='添加人员'
+              centered={true}
               visible={visible}
               onCancel={()=>this.setState({ visible: false })}
               onOk={this.onSubmit}

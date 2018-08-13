@@ -128,6 +128,7 @@ class DrugDirectory extends PureComponent{
         <Modal
          visible={visible}
          title='批量编辑'
+         centered={true}
          onCancel={()=>this.setState({visible:false})}
          onOk={()=>this.setState({visible:false})}>
           <Form>

@@ -406,6 +406,7 @@ class SubSystemMgt extends PureComponent{
         <Modal
           className='ysynet-ant-modal'
           title='管理员'
+          centered={true}
           visible={visible}
           width={1100}
           onCancel={()=>this.setState({ visible: false })}
@@ -516,6 +517,7 @@ class SubSystemMgt extends PureComponent{
           title='系统菜单'
           visible={menuVisible}
           width={1100}
+          centered={true}
           onCancel={()=>this.setState({ menuVisible: false })}
           footer={[
             <Button key="submit" type='primary' loading={dirtyClick} onClick={this.modifySystemMenu}>

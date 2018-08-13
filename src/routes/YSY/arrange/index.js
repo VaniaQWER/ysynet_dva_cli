@@ -189,9 +189,15 @@ class Arrange extends PureComponent{
   }
   //添加机构
   addOrg = () =>{
-    let { rightSelectedRows, leftDataSource, rightDataSource } = this.state;
+    let { leftSelected, leftSelectedRows, rightSelectedRows, rightSelected, leftDataSource, rightDataSource } = this.state;
+    let SetLeft = new Set([...leftSelected]);
+    let SetRight = new Set([...rightSelected]);
+    let intersect = Array.from(new Set([...SetLeft].filter(x => SetRight.has(x))));
+    if(intersect.length > 0){
+      return message.warning('请勿重复添加机构');
+    }
     let newLeftData = [...leftDataSource, ...rightSelectedRows];
-    let newLeftSelected = [], newLeftSelectedRows = [];
+    let newLeftSelected = [...leftSelected], newLeftSelectedRows = [...leftSelectedRows];
     rightSelectedRows.map(item =>{
       newLeftSelected.push(item.orgId);
       newLeftSelectedRows.push(item);
@@ -207,7 +213,7 @@ class Arrange extends PureComponent{
       });
       return null;
     });
-    console.log(newRightData,'newRightData')
+    console.log(newRightData,'newRightData');
     this.setState({ leftDataSource: newLeftData,leftDataCache: newLeftData, leftSelected: newLeftSelected,
       leftSelectedRows: newLeftSelectedRows, rightDataSource: newRightData,
       rightSelected: [], rightSelectedRows: [],rightCheckAll: false 
@@ -256,13 +262,6 @@ class Arrange extends PureComponent{
       }
     })
   }
-  //清空模态框部署机构表格
-  clearTable = () =>{
-    this.props.dispatch({
-      type: 'arrange/clearTable',
-      payload: {}
-    })
-  }
   render(){
     const { record, isEdit, addVisible, arrangeVisible, 
       title, leftDataSource, rightDataSource,leftTableLoading, rightTableLoading } = this.state;
@@ -304,7 +303,7 @@ class Arrange extends PureComponent{
           }}>编辑</a>
           <a style={{ marginLeft: 8 }} onClick={()=>{
             this.setState({ record,arrangeVisible: true, rightDataSource: [],rightSearchValue: '',leftSearchValue: '' })
-            this.clearTable();
+            // this.clearTable();
             this.searchLeftOrgList(record);
           }}>部署机构</a>
         </span>
@@ -333,6 +332,7 @@ class Arrange extends PureComponent{
       <Modal
         title={title}
         width={800}
+        centered={true}
         className='ant-modal-center-footer'
         visible={addVisible}
         onCancel={()=>this.setState({ addVisible: false })}
@@ -353,6 +353,7 @@ class Arrange extends PureComponent{
       <Modal
         className='ysynet-ant-modal'
         title='部署机构'
+        centered={true}
         width={1100}
         visible={arrangeVisible}
         onCancel={()=>this.setState({ arrangeVisible: false })}

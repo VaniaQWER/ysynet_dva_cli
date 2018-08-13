@@ -203,6 +203,7 @@ class JXHPlate extends PureComponent{
         <Modal
           title={'新建'}
           width={488}
+          centered={true}
           visible={visible}
           onCancel={()=>this.setState({ visible: false })}
           footer={[

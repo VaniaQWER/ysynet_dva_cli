@@ -170,6 +170,7 @@ class Dictionary extends PureComponent{
             </Row>
             <Modal 
               title={title}
+              centered={true}
               visible={visible}
               width={460}
               onCancel={()=>this.setState({ visible: false })}
