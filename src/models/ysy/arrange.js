@@ -29,7 +29,7 @@ export default {
           }else{
             let leftSelected = [];
             data.result.rows.map(item => leftSelected.push(item.orgId))
-            callback({ leftDataSource: data.result.rows, leftDataCache: data.result.row, leftTableLoading: false, leftSelected});
+            callback({ leftDataSource: data.result.rows, leftDataCache: data.result.rows, leftTableLoading: false, leftSelected});
           }
         }else{
           message.error(data.msg||'搜索失败');

@@ -110,6 +110,7 @@ class Arrange extends PureComponent{
     获取所有机构列表
   */
   searchLeftOrgList = (record) =>{
+    this.setState({ leftDataSource: [], leftDataCache: [],leftSelected: [],leftSelectedRows: [] })
     this.search('left','',record);
   }
   saveDeploy = () =>{
@@ -175,7 +176,7 @@ class Arrange extends PureComponent{
   }
   search = (dir,value,record) =>{
     let values = {};
-    values.deployId = this.state.record.deployId || record.deployId;
+    values.deployId = record.deployId || this.state.record.deployId;
     values.flag = dir === 'right'? '00': '01';
     values.searchName = value;
     this.props.dispatch({
@@ -332,7 +333,7 @@ class Arrange extends PureComponent{
       <Modal
         title={title}
         width={800}
-        centered={true}
+        centered
         className='ant-modal-center-footer'
         visible={addVisible}
         onCancel={()=>this.setState({ addVisible: false })}
@@ -353,7 +354,7 @@ class Arrange extends PureComponent{
       <Modal
         className='ysynet-ant-modal'
         title='部署机构'
-        centered={true}
+        centered
         width={1100}
         visible={arrangeVisible}
         onCancel={()=>this.setState({ arrangeVisible: false })}

@@ -271,7 +271,7 @@ class SubSystem extends PureComponent{
     let subSystemId = e.item.props.subsystemname ? e.item.props.subsystemid: e.key;
     let selectedKeys = e.key === this.state.selectedKeys[0] ? []: [e.key];
     if(selectedKeys.length === 0 ){
-      this.setState({ url: null,subSystemId: '',query: {}, system: {} })
+      this.setState({ url: null,subSystemId: '',query: {}, system: {}, addsystemDisable: false });
     }else{
       if(this.state.subSystemId !== subSystemId){
         this.setState({ url: ysy.SEARCHMENULIST,subSystemId, query: { subSystemId } })
@@ -279,9 +279,10 @@ class SubSystem extends PureComponent{
       if(!e.item.props.subsystemname){
         system.parentId = e.key;
       }
+      this.setState({ addsystemDisable })
     }
     this.setState({ btnDisable: e.item.props.subsystemname ? false: true, 
-      selectedKeys,system, addsystemDisable, deleteBtndisable,
+      selectedKeys,system, deleteBtndisable,
       selectedSystemId: e.key
     });
   }
