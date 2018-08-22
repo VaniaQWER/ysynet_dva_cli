@@ -32,10 +32,10 @@ export default {
       const data = yield call(accreditService.modifySubSystemList,{ ...payload });
       if(data.status){
         message.success('编辑成功');
-        if(callback) callback();
       }else{
         message.error(data.msg || '编辑失败');
       }
+      if(callback) callback();
     },
   },
   subscriptions: {

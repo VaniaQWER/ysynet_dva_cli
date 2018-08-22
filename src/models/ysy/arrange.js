@@ -44,9 +44,6 @@ export default {
       }
       if(callback) callback();
     },
-    // *clearTable({ payload },{ put }){
-    //   yield put({ type: 'clearTables' })
-    // },
   },
   subscriptions: {
     
