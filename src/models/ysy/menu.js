@@ -15,10 +15,10 @@ export default {
       const data = yield call(menuService.modifyMenu,payload);
       if(data.status){
         message.success('修改成功');
-        if (callback) callback()
       }else{
         message.error(data.msg|| '修改失败');
       }
+      if (callback) callback()
     }
   },
   subscriptions: {
